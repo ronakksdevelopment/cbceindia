@@ -333,6 +333,9 @@
       cursor:not-allowed; opacity:0.45; pointer-events:none;
     }
     .nav-links a.nav-disabled::after { display:none; }
+    /* Generic fallback so .nav-disabled also visually disables links/buttons
+       used outside the main or mobile nav (e.g. in-page CTA buttons). */
+    a.nav-disabled { cursor:not-allowed; opacity:0.45; pointer-events:none; }
 
     /* DEFAULT (transparent / on hero): dark text so it's visible */
     .nav-links a {
@@ -784,18 +787,17 @@
       display:flex; flex-direction:column;
       border:1px solid rgba(255,255,255,0.08);
     }
-    .phone-notch {
-      position:absolute; top:9px; left:50%; transform:translateX(-50%);
-      width:44%; height:16px; background:#0a0a0c; border-radius:0 0 12px 12px; z-index:5;
-    }
-    .phone-notch::after {
-      content:''; position:absolute; top:5px; left:50%; transform:translateX(-50%);
-      width:28px; height:5px; border-radius:99px; background:rgba(255,255,255,0.12);
+    .phone-camera-dot {
+      position:absolute; top:6px; left:50%; transform:translateX(-50%);
+      width:7px; height:7px; border-radius:50%;
+      background:radial-gradient(circle at 35% 35%, #3a3a42, #050506 70%);
+      box-shadow:0 0 0 1.5px rgba(255,255,255,0.06);
+      z-index:5; pointer-events:none;
     }
 
     /* The mobile "screen" itself — the actual internal viewport that loads
        web content — is a true portrait 3:4 aspect ratio per spec. The
-       device chrome (notch above, nav bar below) sits outside this box. */
+       device chrome (camera dot above, nav bar below) sits outside this box. */
     .phone-screen {
       position:relative; width:100%; aspect-ratio:3/4; flex-shrink:0;
       background:var(--bg-gray); border-radius:18px 18px 6px 6px;
@@ -850,28 +852,40 @@
     }
     .phone-app-frame-wrap iframe.active { display:block; }
 
-    /* ---- Fallback screen (iframe embedding blocked) ---- */
+    /* ---- App-open screen: Facebook/X/Instagram/YouTube's own pages
+       always refuse iframe embedding for every website (their server
+       sends X-Frame-Options / frame-ancestors headers), so this is shown
+       immediately, by design, styled as a normal branded launch screen —
+       not as an error, timeout, or "offline" state. ---- */
     .phone-fallback {
       position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center;
-      text-align:center; padding:16px 14px; gap:10px; background:linear-gradient(160deg,#ffffff,var(--bg-gray));
+      text-align:center; padding:20px 16px; gap:12px; background:linear-gradient(160deg,#ffffff,var(--bg-gray));
     }
     .phone-fallback.active { display:flex; }
     .phone-fallback-icon {
-      width:46px; height:46px; border-radius:14px; display:flex; align-items:center; justify-content:center;
-      color:#fff; font-size:1.15rem; box-shadow:0 6px 16px rgba(10,37,64,0.22);
+      width:52px; height:52px; border-radius:16px; display:flex; align-items:center; justify-content:center;
+      color:#fff; font-size:1.3rem; box-shadow:0 8px 20px rgba(10,37,64,0.22);
     }
-    .phone-fallback h5 { font-size:0.68rem; font-weight:800; color:var(--navy); }
+    .phone-fallback h5 { font-size:0.72rem; font-weight:800; color:var(--navy); }
     .phone-fallback p  { font-size:0.52rem; color:var(--text-mid); line-height:1.5; max-width:130px; }
     .phone-fallback-btn {
       margin-top:2px; border:none; cursor:pointer; font-family:var(--font-main);
-      background:var(--navy); color:#fff; font-size:0.55rem; font-weight:700;
-      padding:8px 14px; border-radius:99px; display:inline-flex; align-items:center; gap:6px;
+      background:var(--navy); color:#fff; font-size:0.58rem; font-weight:700;
+      padding:9px 16px; border-radius:99px; display:inline-flex; align-items:center; gap:6px;
       transition:var(--transition);
     }
     .phone-fallback-btn:hover { background:var(--saffron-dark); transform:translateY(-1px); }
 
     /* ---- Recent Apps (app switcher) ---- */
-    .phone-switcher-title { flex-shrink:0; padding:2px 14px 8px; font-size:0.68rem; font-weight:800; color:var(--navy); }
+    .phone-switcher-head { flex-shrink:0; display:flex; align-items:center; justify-content:space-between; padding:2px 12px 8px 14px; }
+    .phone-switcher-title { font-size:0.68rem; font-weight:800; color:var(--navy); }
+    .phone-switcher-clear {
+      background:none; border:none; cursor:pointer; font-family:var(--font-main);
+      color:var(--crimson); font-size:0.52rem; font-weight:700; padding:4px 8px;
+      border-radius:99px; transition:var(--transition);
+    }
+    .phone-switcher-clear:hover { background:rgba(242,20,47,0.08); }
+    .phone-switcher-clear:disabled { opacity:0.35; cursor:default; pointer-events:none; }
     .phone-app-switcher-list { flex:1; min-height:0; overflow-y:auto; padding:2px 12px 12px; display:flex; flex-direction:column; gap:8px; overscroll-behavior:contain; }
     .phone-switch-card {
       display:flex; align-items:center; gap:10px; background:#fff; border:1px solid rgba(10,37,64,0.08);
@@ -1507,8 +1521,8 @@
             <div class="about-feature-item"><div class="aff-icon"><i class="fas fa-globe"></i></div><div class="aff-text"><h4>Pan-India Network</h4><p>500+ franchise centers across states</p></div></div>
           </div>
           <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:16px;">
-            <a href="#" onclick="navigate('courses');return false;" class="btn btn-primary"><i class="fas fa-book-open"></i> Our Courses</a>
-            <a href="#" onclick="navigate('contact');return false;" class="btn btn-outline-navy"><i class="fas fa-phone"></i> Contact Us</a>
+            <a href="#" onclick="return false;" class="btn btn-primary nav-disabled" aria-disabled="true" tabindex="-1"><i class="fas fa-book-open"></i> Our Courses</a>
+            <a href="#" onclick="return false;" class="btn btn-outline-navy nav-disabled" aria-disabled="true" tabindex="-1"><i class="fas fa-phone"></i> Contact Us</a>
           </div>
         </div>
       </div>
@@ -1541,17 +1555,17 @@
         <p class="section-sub reveal">Industry-aligned programs designed to make you job-ready from day one. Practical training with recognized certifications.</p>
       </div>
       <div class="courses-grid">
-        <div class="course-card reveal"><div class="course-icon"><i class="fas fa-desktop"></i></div><span class="course-tag">Foundation</span><h3>Computer Fundamentals</h3><p>Master the basics of computers, operating systems, internet, and essential software for everyday digital tasks.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 1–2 Months</span><span><i class="fas fa-user"></i> Beginner</span></div><a href="#" onclick="navigate('contact');return false;" class="btn btn-navy btn-sm">Learn More <i class="fas fa-arrow-right"></i></a></div>
-        <div class="course-card reveal"><div class="course-icon"><i class="fas fa-folder-open"></i></div><span class="course-tag">Diploma</span><h3>DCA: Diploma in Computer Applications</h3><p>Comprehensive diploma covering MS Office, internet applications, and basic accounting tools.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 6 Months</span><span><i class="fas fa-user"></i> Beginner</span></div><a href="#" onclick="navigate('contact');return false;" class="btn btn-navy btn-sm">Learn More <i class="fas fa-arrow-right"></i></a></div>
-        <div class="course-card reveal"><div class="course-icon"><i class="fas fa-graduation-cap"></i></div><span class="course-tag">Advanced</span><h3>ADCA: Advanced Diploma in Computer Applications</h3><p>Advanced-level curriculum with programming, database management, Tally, and web basics.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 12 Months</span><span><i class="fas fa-user"></i> Intermediate</span></div><a href="#" onclick="navigate('contact');return false;" class="btn btn-navy btn-sm">Learn More <i class="fas fa-arrow-right"></i></a></div>
-        <div class="course-card reveal"><div class="course-icon"><i class="fas fa-chart-column"></i></div><span class="course-tag">Accounting</span><h3>Tally Prime with GST</h3><p>Complete Tally Prime training including GST, inventory management, payroll and financial reports.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 3 Months</span><span><i class="fas fa-user"></i> Beginner</span></div><a href="#" onclick="navigate('contact');return false;" class="btn btn-navy btn-sm">Learn More <i class="fas fa-arrow-right"></i></a></div>
-        <div class="course-card reveal"><div class="course-icon"><i class="fas fa-palette"></i></div><span class="course-tag">Creative</span><h3>Graphic Design</h3><p>Photoshop, Illustrator, CorelDRAW, and Canva. Design logos, banners, and marketing materials.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 3–6 Months</span><span><i class="fas fa-user"></i> Beginner</span></div><a href="#" onclick="navigate('contact');return false;" class="btn btn-navy btn-sm">Learn More <i class="fas fa-arrow-right"></i></a></div>
-        <div class="course-card reveal"><div class="course-icon"><i class="fas fa-globe"></i></div><span class="course-tag">Tech</span><h3>Web Development</h3><p>Full-stack web development with HTML, CSS, JavaScript, PHP, MySQL and modern frameworks.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 6–12 Months</span><span><i class="fas fa-user"></i> Intermediate</span></div><a href="#" onclick="navigate('contact');return false;" class="btn btn-navy btn-sm">Learn More <i class="fas fa-arrow-right"></i></a></div>
-        <div class="course-card reveal"><div class="course-icon"><i class="fas fa-bullhorn"></i></div><span class="course-tag">Marketing</span><h3>Digital Marketing</h3><p>SEO, SEM, Social Media Marketing, Content Creation, Email Marketing and Google Analytics.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 3–6 Months</span><span><i class="fas fa-user"></i> Beginner</span></div><a href="#" onclick="navigate('contact');return false;" class="btn btn-navy btn-sm">Learn More <i class="fas fa-arrow-right"></i></a></div>
-        <div class="course-card reveal"><div class="course-icon">⌨️</div><span class="course-tag">Skill</span><h3>Data Entry Operator</h3><p>Professional data entry, typing speed building, MS Excel, and database management skills.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 2–3 Months</span><span><i class="fas fa-user"></i> Beginner</span></div><a href="#" onclick="navigate('contact');return false;" class="btn btn-navy btn-sm">Learn More <i class="fas fa-arrow-right"></i></a></div>
-        <div class="course-card reveal"><div class="course-icon"><i class="fas fa-comments"></i></div><span class="course-tag">Language</span><h3>Spoken English</h3><p>Build confidence in spoken English with grammar, pronunciation, conversation and interview prep.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 3 Months</span><span><i class="fas fa-user"></i> All Levels</span></div><a href="#" onclick="navigate('contact');return false;" class="btn btn-navy btn-sm">Learn More <i class="fas fa-arrow-right"></i></a></div>
+        <div class="course-card reveal"><div class="course-icon"><i class="fas fa-desktop"></i></div><span class="course-tag">Foundation</span><h3>Computer Fundamentals</h3><p>Master the basics of computers, operating systems, internet, and essential software for everyday digital tasks.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 1–2 Months</span><span><i class="fas fa-user"></i> Beginner</span></div><a href="#" onclick="return false;" class="btn btn-navy btn-sm nav-disabled" aria-disabled="true" tabindex="-1">Learn More <i class="fas fa-arrow-right"></i></a></div>
+        <div class="course-card reveal"><div class="course-icon"><i class="fas fa-folder-open"></i></div><span class="course-tag">Diploma</span><h3>DCA: Diploma in Computer Applications</h3><p>Comprehensive diploma covering MS Office, internet applications, and basic accounting tools.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 6 Months</span><span><i class="fas fa-user"></i> Beginner</span></div><a href="#" onclick="return false;" class="btn btn-navy btn-sm nav-disabled" aria-disabled="true" tabindex="-1">Learn More <i class="fas fa-arrow-right"></i></a></div>
+        <div class="course-card reveal"><div class="course-icon"><i class="fas fa-graduation-cap"></i></div><span class="course-tag">Advanced</span><h3>ADCA: Advanced Diploma in Computer Applications</h3><p>Advanced-level curriculum with programming, database management, Tally, and web basics.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 12 Months</span><span><i class="fas fa-user"></i> Intermediate</span></div><a href="#" onclick="return false;" class="btn btn-navy btn-sm nav-disabled" aria-disabled="true" tabindex="-1">Learn More <i class="fas fa-arrow-right"></i></a></div>
+        <div class="course-card reveal"><div class="course-icon"><i class="fas fa-chart-column"></i></div><span class="course-tag">Accounting</span><h3>Tally Prime with GST</h3><p>Complete Tally Prime training including GST, inventory management, payroll and financial reports.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 3 Months</span><span><i class="fas fa-user"></i> Beginner</span></div><a href="#" onclick="return false;" class="btn btn-navy btn-sm nav-disabled" aria-disabled="true" tabindex="-1">Learn More <i class="fas fa-arrow-right"></i></a></div>
+        <div class="course-card reveal"><div class="course-icon"><i class="fas fa-palette"></i></div><span class="course-tag">Creative</span><h3>Graphic Design</h3><p>Photoshop, Illustrator, CorelDRAW, and Canva. Design logos, banners, and marketing materials.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 3–6 Months</span><span><i class="fas fa-user"></i> Beginner</span></div><a href="#" onclick="return false;" class="btn btn-navy btn-sm nav-disabled" aria-disabled="true" tabindex="-1">Learn More <i class="fas fa-arrow-right"></i></a></div>
+        <div class="course-card reveal"><div class="course-icon"><i class="fas fa-globe"></i></div><span class="course-tag">Tech</span><h3>Web Development</h3><p>Full-stack web development with HTML, CSS, JavaScript, PHP, MySQL and modern frameworks.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 6–12 Months</span><span><i class="fas fa-user"></i> Intermediate</span></div><a href="#" onclick="return false;" class="btn btn-navy btn-sm nav-disabled" aria-disabled="true" tabindex="-1">Learn More <i class="fas fa-arrow-right"></i></a></div>
+        <div class="course-card reveal"><div class="course-icon"><i class="fas fa-bullhorn"></i></div><span class="course-tag">Marketing</span><h3>Digital Marketing</h3><p>SEO, SEM, Social Media Marketing, Content Creation, Email Marketing and Google Analytics.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 3–6 Months</span><span><i class="fas fa-user"></i> Beginner</span></div><a href="#" onclick="return false;" class="btn btn-navy btn-sm nav-disabled" aria-disabled="true" tabindex="-1">Learn More <i class="fas fa-arrow-right"></i></a></div>
+        <div class="course-card reveal"><div class="course-icon">⌨️</div><span class="course-tag">Skill</span><h3>Data Entry Operator</h3><p>Professional data entry, typing speed building, MS Excel, and database management skills.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 2–3 Months</span><span><i class="fas fa-user"></i> Beginner</span></div><a href="#" onclick="return false;" class="btn btn-navy btn-sm nav-disabled" aria-disabled="true" tabindex="-1">Learn More <i class="fas fa-arrow-right"></i></a></div>
+        <div class="course-card reveal"><div class="course-icon"><i class="fas fa-comments"></i></div><span class="course-tag">Language</span><h3>Spoken English</h3><p>Build confidence in spoken English with grammar, pronunciation, conversation and interview prep.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 3 Months</span><span><i class="fas fa-user"></i> All Levels</span></div><a href="#" onclick="return false;" class="btn btn-navy btn-sm nav-disabled" aria-disabled="true" tabindex="-1">Learn More <i class="fas fa-arrow-right"></i></a></div>
       </div>
-      <div class="text-center" style="margin-top:40px;"><a href="#" onclick="navigate('contact');return false;" class="btn btn-primary"><i class="fas fa-list-alt"></i> View All Programs &amp; Enquire</a></div>
+      <div class="text-center" style="margin-top:40px;"><a href="#" onclick="return false;" class="btn btn-primary nav-disabled" aria-disabled="true" tabindex="-1"><i class="fas fa-list-alt"></i> View All Programs &amp; Enquire</a></div>
     </div>
   </section>
 </div>
@@ -1817,7 +1831,7 @@
           <h4>CBCE On Social</h4>
           <div class="phone-widget" id="phone-widget" role="region" aria-label="CBCE social media mini app">
             <div class="phone-device">
-              <div class="phone-notch"></div>
+              <div class="phone-camera-dot"></div>
               <div class="phone-screen" id="phone-screen">
 
                 <!-- HOME SCREEN -->
@@ -1867,7 +1881,10 @@
                     <span class="phone-clock" id="phone-clock-switcher">9:41</span>
                     <span class="phone-status-icons"><i class="fas fa-signal"></i><i class="fas fa-wifi"></i><i class="fas fa-battery-three-quarters"></i></span>
                   </div>
-                  <div class="phone-switcher-title">Recent Apps</div>
+                  <div class="phone-switcher-head">
+                    <span class="phone-switcher-title">Recent Apps</span>
+                    <button type="button" class="phone-switcher-clear" id="phone-switcher-clear" onclick="phoneClearRecents()" disabled>Clear all</button>
+                  </div>
                   <div class="phone-app-switcher-list" id="phone-app-switcher-list"></div>
                 </div>
 
@@ -2775,25 +2792,35 @@
       name: 'Facebook',
       url: 'https://www.facebook.com/cbceindia?rdid=qtmyj1pWthNimSRh&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F15oC2Qw6ne%2F#',
       icon: 'fab fa-facebook-f',
-      colorClass: 'app-facebook'
+      colorClass: 'app-facebook',
+      // Facebook always sends response headers that refuse to be framed
+      // by any third-party site, so there is no live embed to attempt —
+      // going straight to the fallback avoids a blank/broken frame.
+      knownBlocked: true
     },
     x: {
       name: 'X',
       url: 'https://x.com/cbceindia',
       icon: 'fab fa-x-twitter',
-      colorClass: 'app-x'
+      colorClass: 'app-x',
+      knownBlocked: true
     },
     instagram: {
       name: 'Instagram',
       url: 'https://www.instagram.com/cbceindia',
       icon: 'fab fa-instagram',
-      colorClass: 'app-instagram'
+      colorClass: 'app-instagram',
+      knownBlocked: true
     },
     youtube: {
       name: 'YouTube',
       url: 'https://www.youtube.com/@cbceindia28',
       icon: 'fab fa-youtube',
-      colorClass: 'app-youtube'
+      colorClass: 'app-youtube',
+      // YouTube's normal channel pages also refuse framing (only the
+      // dedicated /embed/ player URLs allow it, which isn't the same
+      // page as the channel itself), so this is treated the same way.
+      knownBlocked: true
     }
   };
 
@@ -2839,12 +2866,15 @@
 
   function phoneRenderSwitcher() {
     const list = document.getElementById('phone-app-switcher-list');
+    const clearBtn = document.getElementById('phone-switcher-clear');
     if (!list) return;
     list.innerHTML = '';
     if (!phoneState.recents.length) {
       list.innerHTML = '<div class="phone-switcher-empty">No recent apps yet.<br>Open an app from the Home screen.</div>';
+      if (clearBtn) clearBtn.disabled = true;
       return;
     }
+    if (clearBtn) clearBtn.disabled = false;
     // Most-recently-opened first in the list.
     [...phoneState.recents].reverse().forEach(key => {
       const app = PHONE_APPS[key];
@@ -2863,6 +2893,20 @@
   function phoneMarkRecent(key) {
     phoneState.recents = phoneState.recents.filter(k => k !== key);
     phoneState.recents.push(key);
+  }
+
+  /* ---- Clears the Recent Apps list (and each app's own in-app history/
+     cached iframe, so a re-opened app starts fresh from its base URL,
+     matching real Android "Clear all" behaviour) without navigating away
+     from the switcher screen itself. ---- */
+  function phoneClearRecents() {
+    if (!phoneState.recents.length) return;
+    phoneState.recents = [];
+    phoneState.history = { facebook: [], x: [], instagram: [], youtube: [] };
+    phoneState.frames = {};
+    const wrap = document.getElementById('phone-app-frame-wrap');
+    if (wrap) wrap.innerHTML = '';
+    phoneRenderSwitcher();
   }
 
   /* ---- Opening an app: pushes its base URL onto that app's own history
@@ -2919,60 +2963,50 @@
     const app = PHONE_APPS[key];
     const url = phoneState.history[key][phoneState.history[key].length - 1] || app.url;
 
-    const iframe = document.createElement('iframe');
-    iframe.setAttribute('title', app.name + ' — CBCE');
-    iframe.setAttribute('loading', 'lazy');
-    iframe.setAttribute('referrerpolicy', 'no-referrer');
-    // Sandbox kept as permissive as embedding these public social pages
-    // requires (scripts/same-origin/forms/popups for their own UI to
-    // function) while still preventing top-level navigation of the host
-    // page itself — the iframe cannot break out and navigate our site.
-    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-forms allow-popups-to-escape-sandbox');
-    iframe.src = url;
-
     const fallback = document.createElement('div');
     fallback.className = 'phone-fallback';
     fallback.innerHTML =
       '<span class="phone-fallback-icon ' + app.colorClass + '"><i class="' + app.icon + '"></i></span>' +
-      '<h5>' + app.name + '</h5>' +
-      '<p>' + app.name + ' does not allow its page to be displayed inside another site. Open it directly instead.</p>' +
+      '<h5>CBCE on ' + app.name + '</h5>' +
+      '<p>Follow @cbceindia for updates, photos and announcements.</p>' +
       '<button type="button" class="phone-fallback-btn" onclick="window.open(\'' + app.url.replace(/'/g, "\\'") + '\',\'_blank\',\'noopener\')">' +
-        '<i class="fas fa-arrow-up-right-from-square"></i> Open Website' +
+        '<i class="fas fa-arrow-up-right-from-square"></i> Open ' + app.name +
       '</button>';
+
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute('title', app.name + ' — CBCE');
+    iframe.setAttribute('loading', 'lazy');
+    iframe.setAttribute('referrerpolicy', 'no-referrer');
+    // Sandbox kept as permissive as embedding a public social page
+    // requires (scripts/same-origin/forms/popups for their own UI to
+    // function) while still preventing top-level navigation of the host
+    // page itself — the iframe cannot break out and navigate our site.
+    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-forms allow-popups-to-escape-sandbox');
 
     const entry = { iframe, fallback, status: 'loading' };
 
-    // Detection heuristic: browsers refuse to fire a normal 'load' or
-    // fire it with an inaccessible/empty document when X-Frame-Options
-    // or a frame-ancestors CSP blocks embedding. There is no reliable
-    // cross-origin JS signal for "blocked" (same-origin policy prevents
-    // reading the blocked frame's contents), so a short grace timer is
-    // the standard, safest way to detect it: if genuine content hasn't
-    // signalled successful load within the window, treat it as blocked
-    // and switch to the fallback automatically.
-    const blockTimer = setTimeout(() => phoneMarkBlocked(key), 4500);
+    // Platforms known in advance to always refuse iframe embedding (via
+    // X-Frame-Options / frame-ancestors CSP) skip the iframe attempt
+    // entirely — there is no live page a real load event could ever
+    // report, so waiting on one would just show a blank frame. This is
+    // the deterministic, reliable branch.
+    if (app.knownBlocked) {
+      entry.status = 'blocked';
+      return entry;
+    }
 
-    iframe.addEventListener('load', () => {
-      clearTimeout(blockTimer);
-      // A same-origin-policy read attempt: if the frame loaded a real
-      // cross-origin document this throws (expected, means it's live),
-      // if it silently succeeds with an empty/about:blank-ish doc it
-      // usually means the request was refused before rendering.
-      let blocked = false;
-      try {
-        const doc = iframe.contentDocument || (iframe.contentWindow && iframe.contentWindow.document);
-        if (doc && (!doc.body || !doc.body.hasChildNodes())) blocked = true;
-      } catch (e) {
-        blocked = false; // cross-origin access throwing = real page actually loaded
-      }
-      if (blocked) phoneMarkBlocked(key);
-      else phoneMarkLoaded(key);
-    }, { once: true });
-
-    iframe.addEventListener('error', () => {
-      clearTimeout(blockTimer);
-      phoneMarkBlocked(key);
-    }, { once: true });
+    // For any app NOT known in advance to block embedding, attempt a
+    // real load. There is no trustworthy cross-origin JS signal for
+    // "the browser silently refused to render this" — reading a
+    // cross-origin frame's document always throws regardless of whether
+    // it rendered, so that can't be used to detect a block. A load
+    // timeout is the only reliable, false-positive-free heuristic here:
+    // if 'load' fires within the window, treat it as successfully
+    // embedded; otherwise fall back.
+    const blockTimer = setTimeout(() => phoneMarkBlocked(key), 6000);
+    iframe.addEventListener('load', () => { clearTimeout(blockTimer); phoneMarkLoaded(key); }, { once: true });
+    iframe.addEventListener('error', () => { clearTimeout(blockTimer); phoneMarkBlocked(key); }, { once: true });
+    iframe.src = url;
 
     return entry;
   }
