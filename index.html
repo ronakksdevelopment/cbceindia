@@ -850,6 +850,15 @@
     .phone-app-frame-wrap iframe {
       position:absolute; inset:0; width:100%; height:100%; border:0; display:none; background:#fff;
     }
+    /* Facebook's Page Plugin has a hard 180px minimum width baked into its
+       own markup and isn't fluid, so its iframe is rendered at a fixed
+       size wide enough to satisfy that minimum, then CSS-scaled down and
+       re-centred to actually fit inside the ~150-170px mockup screen. */
+    .phone-app-frame-wrap iframe.fb-plugin-frame {
+      width:180px; height:420px;
+      left:50%; top:0; right:auto; bottom:auto;
+      transform-origin:top left;
+    }
     .phone-app-frame-wrap iframe.active { display:block; }
 
     /* ---- App-open screen: Facebook/X/Instagram/YouTube's own pages
@@ -2790,13 +2799,14 @@
   const PHONE_APPS = {
     facebook: {
       name: 'Facebook',
-      url: 'https://www.facebook.com/cbceindia?rdid=qtmyj1pWthNimSRh&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F15oC2Qw6ne%2F#',
+      url: 'https://www.facebook.com/cbceindia/',
       icon: 'fab fa-facebook-f',
       colorClass: 'app-facebook',
-      // Facebook always sends response headers that refuse to be framed
-      // by any third-party site, so there is no live embed to attempt —
-      // going straight to the fallback avoids a blank/broken frame.
-      knownBlocked: true
+      // Facebook's own Page Plugin IS designed to be embedded (unlike a
+      // normal facebook.com page, which refuses framing) — it renders a
+      // real, live timeline/photos feed for any Public Page via a
+      // dedicated facebook.com/plugins/page.php iframe endpoint.
+      embedMode: 'facebook-plugin'
     },
     x: {
       name: 'X',
@@ -2817,10 +2827,11 @@
       url: 'https://www.youtube.com/@cbceindia28',
       icon: 'fab fa-youtube',
       colorClass: 'app-youtube',
-      // YouTube's normal channel pages also refuse framing (only the
-      // dedicated /embed/ player URLs allow it, which isn't the same
-      // page as the channel itself), so this is treated the same way.
-      knownBlocked: true
+      // YouTube channel pages can't be embedded (only individual /embed/
+      // video players can), and there's no live-fetchable subscriber
+      // count/thumbnail without the paid Data API, so this renders as a
+      // simple static channel-info card rather than a live embed.
+      embedMode: 'channel-card'
     }
   };
 
@@ -2928,6 +2939,24 @@
      embedded page or the branded fallback. Each app's iframe is created
      once and cached, so switching between apps preserves each app's own
      loaded state instead of reloading every time. ---- */
+  /* ---- Scales the fixed 180px-wide Facebook Page Plugin iframe down (and
+     re-centers it) to actually fit the mockup's ~150-170px screen width,
+     since the plugin itself cannot render fluidly below 180px. ---- */
+  function phoneScaleFacebookFrame(iframe) {
+    const wrap = document.getElementById('phone-app-frame-wrap');
+    if (!wrap || !iframe) return;
+    const available = wrap.clientWidth;
+    if (!available) return;
+    const scale = Math.min(1, available / 180);
+    iframe.style.transform = 'translateX(-50%) scale(' + scale + ')';
+    iframe.style.height = (420 * scale) + 'px';
+  }
+  window.addEventListener('resize', () => {
+    if (phoneState.currentApp === 'facebook' && phoneState.frames.facebook) {
+      phoneScaleFacebookFrame(phoneState.frames.facebook.iframe);
+    }
+  });
+
   function phoneRenderAppFrame(key) {
     const app = PHONE_APPS[key];
     const wrap = document.getElementById('phone-app-frame-wrap');
@@ -2956,6 +2985,7 @@
       entry.fallback.classList.add('active');
     } else {
       entry.iframe.classList.add('active');
+      if (key === 'facebook') phoneScaleFacebookFrame(entry.iframe);
     }
   }
 
@@ -2965,6 +2995,62 @@
 
     const fallback = document.createElement('div');
     fallback.className = 'phone-fallback';
+
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute('title', app.name + ' — CBCE');
+    iframe.setAttribute('loading', 'lazy');
+    iframe.setAttribute('referrerpolicy', 'no-referrer');
+
+    const entry = { iframe, fallback, status: 'loading' };
+
+    /* ---- Facebook: the official Page Plugin is a purpose-built embed
+       endpoint (facebook.com/plugins/page.php) that Facebook explicitly
+       allows to be framed by any site, for any Public Page — unlike a
+       normal facebook.com/<page> URL, which always refuses framing. It
+       renders a real, live timeline (posts/photos) plus a Like/Follow
+       button pulled straight from the real page. ---- */
+    if (app.embedMode === 'facebook-plugin') {
+      const pluginSrc = 'https://www.facebook.com/plugins/page.php?href=' +
+        encodeURIComponent(app.url) +
+        '&tabs=timeline&width=180&height=420&small_header=true' +
+        '&adapt_container_width=false&hide_cover=false&show_facepile=false&appId';
+      iframe.classList.add('fb-plugin-frame');
+      iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox');
+      iframe.style.colorScheme = 'light';
+      const blockTimer = setTimeout(() => phoneMarkBlocked(key), 7000);
+      iframe.addEventListener('load', () => { clearTimeout(blockTimer); phoneMarkLoaded(key); phoneScaleFacebookFrame(iframe); }, { once: true });
+      iframe.addEventListener('error', () => { clearTimeout(blockTimer); phoneMarkBlocked(key); }, { once: true });
+      iframe.src = pluginSrc;
+      // If the plugin endpoint itself is ever unreachable, fall back to
+      // the same clean "open app" card used for non-embeddable platforms.
+      fallback.innerHTML =
+        '<span class="phone-fallback-icon ' + app.colorClass + '"><i class="' + app.icon + '"></i></span>' +
+        '<h5>CBCE on Facebook</h5>' +
+        '<p>Follow @cbceindia for updates, photos and announcements.</p>' +
+        '<button type="button" class="phone-fallback-btn" onclick="window.open(\'' + app.url.replace(/'/g, "\\'") + '\',\'_blank\',\'noopener\')">' +
+          '<i class="fas fa-arrow-up-right-from-square"></i> Open Facebook' +
+        '</button>';
+      return entry;
+    }
+
+    /* ---- YouTube: no channel-embed endpoint exists (only individual
+       /embed/VIDEO_ID players can be framed), and live subscriber counts
+       or thumbnails require the paid Data API, so this is a simple,
+       honest static channel card — not a live feed. ---- */
+    if (app.embedMode === 'channel-card') {
+      entry.status = 'blocked';
+      fallback.innerHTML =
+        '<span class="phone-fallback-icon ' + app.colorClass + '"><i class="' + app.icon + '"></i></span>' +
+        '<h5>CBCE India</h5>' +
+        '<p>Watch course walkthroughs, campus updates and student stories on our YouTube channel.</p>' +
+        '<button type="button" class="phone-fallback-btn" onclick="window.open(\'' + app.url.replace(/'/g, "\\'") + '\',\'_blank\',\'noopener\')">' +
+          '<i class="fas fa-arrow-up-right-from-square"></i> View Channel' +
+        '</button>';
+      return entry;
+    }
+
+    // ---- Default: platforms with no embeddable widget at all
+    // (Instagram, X) — clean branded "open app" card. ----
     fallback.innerHTML =
       '<span class="phone-fallback-icon ' + app.colorClass + '"><i class="' + app.icon + '"></i></span>' +
       '<h5>CBCE on ' + app.name + '</h5>' +
@@ -2973,17 +3059,11 @@
         '<i class="fas fa-arrow-up-right-from-square"></i> Open ' + app.name +
       '</button>';
 
-    const iframe = document.createElement('iframe');
-    iframe.setAttribute('title', app.name + ' — CBCE');
-    iframe.setAttribute('loading', 'lazy');
-    iframe.setAttribute('referrerpolicy', 'no-referrer');
     // Sandbox kept as permissive as embedding a public social page
     // requires (scripts/same-origin/forms/popups for their own UI to
     // function) while still preventing top-level navigation of the host
     // page itself — the iframe cannot break out and navigate our site.
     iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-forms allow-popups-to-escape-sandbox');
-
-    const entry = { iframe, fallback, status: 'loading' };
 
     // Platforms known in advance to always refuse iframe embedding (via
     // X-Frame-Options / frame-ancestors CSP) skip the iframe attempt
