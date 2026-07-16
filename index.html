@@ -9,6 +9,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <!-- Animated icon system: pure CSS keyframe animations applied directly to Font
+       Awesome glyphs (see ANIMATED ICON ENGINE below). No external icon-CDN or
+       per-icon network fetch is required, so icons render identically regardless
+       of network conditions. -->
 
   <style>
     /* ============================================================
@@ -44,6 +48,15 @@
       --transition:  all 0.3s cubic-bezier(0.25,0.46,0.45,0.94);
       --font-main:   'Poppins', sans-serif;
       --font-display:'Playfair Display', serif;
+
+      /* Icon-system tokens: animated icon accents on navy surfaces use the tricolor
+         trio below; icons on light surfaces default to navy/saffron for contrast. */
+      --icon-primary:   var(--saffron);
+      --icon-secondary: var(--green);
+      --icon-tertiary:  var(--navy);
+      --icon-on-navy-primary:   #FF9933;
+      --icon-on-navy-secondary:#FFFFFF;
+      --icon-on-navy-tertiary: #138808;
     }
 
     *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
@@ -53,6 +66,9 @@
     ::-webkit-scrollbar       { width:7px; }
     ::-webkit-scrollbar-track { background:var(--bg-gray); }
     ::-webkit-scrollbar-thumb { background:var(--crimson); border-radius:99px; }
+
+    ::selection     { background:var(--saffron); color:var(--navy); }
+    ::-moz-selection{ background:var(--saffron); color:var(--navy); }
 
     /* ---- Utilities ---- */
     .container   { max-width:1180px; margin:0 auto; padding:0 24px; }
@@ -100,6 +116,84 @@
 
     /* ---- Cards ---- */
     .glass-card { background:rgba(255,255,255,0.85); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.5); border-radius:var(--radius-xl); box-shadow:var(--shadow-md); }
+
+    /* ============================================================
+       ANIMATED ICON ENGINE (self-contained, CSS-only)
+       Every icon on the site is a plain Font Awesome glyph, animated with local
+       CSS keyframes, no external icon CDN, no per-icon network fetch, no custom
+       element registration to wait on. Icons render and animate identically
+       regardless of network conditions.
+
+       Two animation moments:
+       1) Entrance: when an icon's container scrolls into view, the JS below adds
+          .icon-in, which plays a short pop/settle animation once.
+       2) Hover: continuous micro-motion (wobble / bounce / pulse-ring / spin)
+          keyed off the icon's semantic role via data-ico-fx on the wrapper.
+       ============================================================ */
+    .ico-wrap {
+      position:relative; display:inline-flex; align-items:center; justify-content:center;
+      line-height:0;
+    }
+    .ico-wrap i { transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1), color 0.3s ease; }
+
+    /* Entrance pop, plays once when scrolled into view */
+    @keyframes icoPop {
+      0%   { transform:scale(0.4) rotate(-12deg); opacity:0; }
+      60%  { transform:scale(1.12) rotate(4deg);  opacity:1; }
+      100% { transform:scale(1) rotate(0deg); opacity:1; }
+    }
+    .ico-wrap.icon-in i { animation:icoPop 0.6s cubic-bezier(0.34,1.56,0.64,1) both; }
+
+    /* Continuous pulse-ring behind the icon on hover, CSS-only, no JS timers */
+    .ico-wrap::before {
+      content:''; position:absolute; inset:-8px; border-radius:50%;
+      background:currentColor; opacity:0; transform:scale(0.6);
+      transition:opacity 0.3s ease, transform 0.3s ease; pointer-events:none; z-index:0;
+    }
+    .ico-wrap i { position:relative; z-index:1; }
+
+    /* data-ico-fx="wobble" — playful rock, used for handshake / community icons */
+    [data-ico-fx="wobble"]:hover i { animation:icoWobble 0.6s ease-in-out; }
+    @keyframes icoWobble {
+      0%,100% { transform:rotate(0deg); }
+      25% { transform:rotate(-12deg) scale(1.08); }
+      75% { transform:rotate(12deg) scale(1.08); }
+    }
+
+    /* data-ico-fx="bounce" — used for action/arrow/download icons */
+    [data-ico-fx="bounce"]:hover i { animation:icoBounce 0.55s cubic-bezier(0.34,1.56,0.64,1); }
+    @keyframes icoBounce {
+      0%   { transform:translateY(0) scale(1); }
+      40%  { transform:translateY(-6px) scale(1.1); }
+      100% { transform:translateY(0) scale(1); }
+    }
+
+    /* data-ico-fx="spin" — used for gear/settings/globe/loading-adjacent icons */
+    [data-ico-fx="spin"]:hover i { animation:icoSpin 0.7s cubic-bezier(0.65,0.05,0.36,1); }
+    @keyframes icoSpin {
+      from { transform:rotate(0deg); }
+      to   { transform:rotate(360deg); }
+    }
+
+    /* data-ico-fx="pulse" — used for award/certificate/trust icons; ring pulses out */
+    [data-ico-fx="pulse"]:hover::before { opacity:0.16; transform:scale(1.35); }
+    [data-ico-fx="pulse"]:hover i { animation:icoPulse 0.7s ease-in-out; }
+    @keyframes icoPulse {
+      0%,100% { transform:scale(1); }
+      50% { transform:scale(1.18); }
+    }
+
+    /* data-ico-fx="float" — gentle up/down drift, used for informational icons */
+    [data-ico-fx="float"]:hover i { animation:icoFloat 1s ease-in-out infinite; }
+    @keyframes icoFloat {
+      0%,100% { transform:translateY(0); }
+      50% { transform:translateY(-4px); }
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+      .ico-wrap i, .ico-wrap.icon-in i,
+      [data-ico-fx]:hover i, [data-ico-fx]:hover::before { animation:none !important; transition:none !important; }
+    }
 
     /* ---- Reveal Animations ---- */
     .reveal       { opacity:0; transform:translateY(40px);   transition:opacity 0.7s ease,transform 0.7s ease; }
@@ -183,7 +277,7 @@
     @keyframes page-in { from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);} }
 
     /* ============================================================
-       NAVBAR — FIX: dark text when not scrolled (transparent bg)
+       NAVBAR: dark text when not scrolled (transparent bg)
        ============================================================ */
     #navbar {
       position:fixed; top:0; left:0; right:0; z-index:1000;
@@ -195,16 +289,18 @@
     }
     .nav-inner {
       display:flex; align-items:center; justify-content:space-between;
-      max-width:1180px; margin:0 auto; padding:0 24px; gap:12px; min-height:68px;
+      max-width:1300px; margin:0 auto; padding:0 20px; gap:8px; min-height:68px;
     }
     .nav-logo { display:flex; align-items:center; gap:10px; }
     .nav-logo img { height:44px; object-fit:contain; }
-    .nav-logo-secondary { height:34px !important; }
+    .nav-logo-shape { height:42px; object-fit:contain; transition:var(--transition); }
+    .nav-logo:hover .nav-logo-shape { transform:scale(1.03); }
 
     .nav-links {
-      display:flex; align-items:center; gap:4px; list-style:none;
-      flex:1; justify-content:center; flex-wrap:wrap;
+      display:flex; align-items:center; gap:2px; list-style:none;
+      flex:1; justify-content:center; flex-wrap:nowrap; min-width:0;
     }
+    .nav-links li { flex-shrink:0; }
     .nav-links a.nav-disabled,
     #mobile-nav a.nav-disabled {
       cursor:not-allowed; opacity:0.45; pointer-events:none;
@@ -260,17 +356,27 @@
       position:relative; min-height:88vh; padding-top:80px;
       display:flex; align-items:center; overflow:hidden; background:var(--navy);
     }
-    /* Solid-color educational hero: flat navy base with a soft saffron→green accent strip.
-       No photography, no glass/glow effects. */
+    /* Navy base + a very low-opacity campus/education backdrop image, so the tricolor
+       particle field (below) always stays legible on top. */
     .hero-bg {
       position:absolute; inset:0; width:100%; height:100%;
-      background:linear-gradient(160deg,var(--navy) 0%,var(--navy) 60%,var(--navy-light) 100%);
+      background:
+        linear-gradient(160deg, rgba(10,37,64,0.94) 0%, rgba(10,37,64,0.90) 55%, rgba(18,50,85,0.93) 100%),
+        url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1600&q=60');
+      background-size: cover;
+      background-position: center;
     }
     .hero-bg::after {
       content:''; position:absolute; left:0; right:0; bottom:0; height:6px;
       background:linear-gradient(90deg,var(--saffron) 0%,var(--white) 50%,var(--green) 100%);
+      z-index:3;
     }
-    #particles-canvas { display:none; }
+    /* Particle canvas: tricolor (white / saffron / green) dots, clipped strictly to the
+       navy hero box via #hero's overflow:hidden above. */
+    #particles-canvas {
+      position:absolute; inset:0; width:100%; height:100%; z-index:1;
+      pointer-events:none;
+    }
     .hero-content {
       position:relative; z-index:2;
       max-width:1180px; margin:0 auto; padding:64px 24px 64px; width:100%;
@@ -332,7 +438,7 @@
     .notice-ticker-wrap { flex:1; overflow:hidden; }
     .notice-ticker { display:flex; gap:60px; white-space:nowrap; animation:ticker 30s linear infinite; }
     .notice-ticker span { font-size:0.87rem; font-weight:500; white-space:nowrap; }
-    .notice-ticker span::before { content:'📢 '; }
+    .notice-ticker span::before { content:''; }
     @keyframes ticker { 0%{transform:translateX(0)}100%{transform:translateX(-50%)} }
 
     /* ============================================================
@@ -506,16 +612,37 @@
     .service-card h3 { font-size:1rem; font-weight:700; color:var(--navy); margin-bottom:6px; }
     .service-card p { font-size:0.85rem; color:var(--text-mid); line-height:1.55; }
 
-    /* ---- Homepage: Affiliation badges ---- */
-    .affil-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+    /* ---- Homepage: Affiliation badges, continuous right-to-left marquee ---- */
+    .affil-marquee {
+      overflow:hidden; width:100%; margin-top:8px;
+      -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 6%,#000 94%,transparent 100%);
+      mask-image:linear-gradient(90deg,transparent 0,#000 6%,#000 94%,transparent 100%);
+    }
+    .affil-track {
+      display:flex; align-items:center; gap:16px; width:max-content;
+      animation:affil-scroll 32s linear infinite;
+    }
+    /* Intentionally continuous: affiliation marquee keeps scrolling on hover (no pause-on-hover). */
+    @keyframes affil-scroll {
+      from { transform:translateX(0); }
+      to   { transform:translateX(-50%); } /* badge set is duplicated by JS, so -50% = one full loop */
+    }
     .affil-badge {
       display:flex; align-items:center; gap:12px; background:var(--bg-gray);
-      border:1px solid rgba(10,37,64,0.06); border-radius:var(--radius-md); padding:16px 18px;
-      transition:var(--transition);
+      border:1px solid rgba(10,37,64,0.06); border-radius:var(--radius-md); padding:16px 20px;
+      flex-shrink:0; white-space:nowrap;
     }
-    .affil-badge:hover { border-color:var(--saffron); transform:translateY(-2px); }
+    /* No hover reaction by design: badges scroll continuously, so a hover state
+       can never track the pointer meaningfully. Kept static and flat at all times.
+       This also silences the site-wide animated-icon hover effect for icons here. */
+    .affil-badge [data-ico-fx]:hover i { animation:none; }
+    .affil-badge [data-ico-fx]:hover::before { opacity:0; transform:scale(0.6); }
     .affil-badge i { font-size:1.15rem; color:var(--green); flex-shrink:0; width:22px; text-align:center; }
     .affil-badge span { font-size:0.85rem; font-weight:600; color:var(--navy); }
+    @media (prefers-reduced-motion:reduce) {
+      .affil-track { animation:none; }
+      .affil-marquee { overflow-x:auto; }
+    }
 
     /* ---- Homepage: About / News / Contact info strip ---- */
     .info-strip-card { background:var(--white); border-radius:var(--radius-lg); padding:28px; box-shadow:var(--shadow-sm); border:1px solid rgba(10,37,64,0.06); }
@@ -589,14 +716,14 @@
     .footer-bottom a { color:var(--crimson); text-decoration:none; }
 
     /* ============================================================
-       FLOATING BUTTONS — Admin moved here as 4th float button
+       FLOATING BUTTONS: Admin moved here as 4th float button
        ============================================================ */
     .floating-btns { position:fixed; bottom:32px; right:24px; display:flex; flex-direction:column; gap:12px; z-index:990; }
     .float-btn { width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.3rem; color:white; text-decoration:none; box-shadow:var(--shadow-md); transition:var(--transition); animation:float-anim 3s ease-in-out infinite; border:none; cursor:pointer; }
     @keyframes float-anim { 0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)} }
     .float-wa    { background:#25d366; }
     .float-call  { background:var(--crimson); animation-delay:0.5s; }
-    /* Admin float button — dark navy with shield icon */
+    /* Admin float button: dark navy with shield icon */
     .float-admin { background:var(--navy-dark); border:2px solid rgba(255,255,255,0.2); animation-delay:0.75s; }
     .float-admin:hover { background:var(--navy-light) !important; border-color:var(--crimson); }
     .float-top   { background:var(--navy); animation-delay:1s; display:none; }
@@ -722,9 +849,18 @@
     /* ============================================================
        RESPONSIVE
        ============================================================ */
+    @media (max-width:1220px){
+      .nav-links a { padding:7px 10px; font-size:.82rem; }
+    }
     @media (max-width:1024px){
-      .nav-links a { padding:6px 9px; font-size:.8rem; }
+      .nav-links a { padding:6px 7px; font-size:.76rem; }
+      .nav-right .btn-sm { padding:9px 14px; font-size:.82rem; }
       .adm-stat-grid { grid-template-columns:repeat(2,1fr); }
+    }
+    @media (max-width:860px){
+      .nav-links a { padding:6px 6px; font-size:.72rem; }
+      .nav-logo img { height:38px; }
+      .nav-right .btn-sm { padding:8px 12px; font-size:.78rem; }
     }
     @media (max-width:900px){
       .hero-counters { grid-template-columns:repeat(2,1fr); }
@@ -740,7 +876,6 @@
       .adm-sidebar   { width:220px; }
       .adm-grid3     { grid-template-columns:1fr 1fr; }
       .grid-4        { grid-template-columns:repeat(2,1fr); }
-      .affil-grid    { grid-template-columns:repeat(2,1fr); }
       .grid-3        { grid-template-columns:1fr; }
     }
     @media (max-width:768px){
@@ -766,8 +901,7 @@
     }
     @media (max-width:480px){
       .nav-inner { padding:0 12px; min-height:60px; }
-      .nav-logo img { height:36px; }
-      .nav-logo-secondary { display:none; }
+      .nav-logo img { height:32px; }
       .container { padding:0 16px; }
       .section-pad { padding:48px 0; }
       .hero-counters { grid-template-columns:1fr 1fr; }
@@ -778,7 +912,8 @@
       .placement-stats { grid-template-columns:1fr 1fr; }
       .adm-stat-grid { grid-template-columns:1fr 1fr; }
       .grid-4        { grid-template-columns:1fr; }
-      .affil-grid    { grid-template-columns:1fr; }
+      .affil-track   { gap:12px; animation-duration:22s; }
+      .affil-badge   { padding:13px 16px; }
       .adm-sidebar { position:fixed; z-index:9999; height:100%; transform:translateX(-100%); transition:transform .3s; width:240px; }
       .adm-sidebar.open { transform:translateX(0); }
     }
@@ -800,14 +935,14 @@
 <div id="welcome-overlay">
   <div class="welcome-box">
     <button class="welcome-close" onclick="closeWelcome()"><i class="fas fa-times"></i></button>
-    <div class="welcome-icon">🎓</div>
+    <div class="welcome-icon"><i class="fas fa-graduation-cap"></i></div>
     <h2>Welcome to CBCE</h2>
-    <p>Continental Board of Computer Education — a venture of CBCE Skill Development Private Limited, established under the Ministry of Corporate Affairs, Government of India.</p>
+    <p>Continental Board of Computer Education, a venture of CBCE Skill Development Private Limited, established under the Ministry of Corporate Affairs, Government of India.</p>
     <div class="welcome-strip">
-      <span class="wbadge">🏆 ISO 9001:2015 &amp; 21001:2018 Certified</span>
-      <span class="wbadge">🇮🇳 Govt. of India Registered</span>
-      <span class="wbadge">📜 Trade Mark Registered</span>
-      <span class="wbadge">🤝 QCI Member</span>
+      <span class="wbadge"><i class="fas fa-award"></i> ISO 9001:2015 &amp; 21001:2018 Certified</span>
+      <span class="wbadge"><i class="fas fa-flag"></i> Govt. of India Registered</span>
+      <span class="wbadge"><i class="fas fa-certificate"></i> Trade Mark Registered</span>
+      <span class="wbadge"><i class="fas fa-handshake"></i> QCI Member</span>
     </div>
     <a href="#" onclick="closeWelcome();return false;" class="btn btn-primary" style="width:100%;justify-content:center;">
       <i class="fas fa-graduation-cap"></i> Explore CBCE
@@ -829,13 +964,12 @@
 <div id="toast-wrap"></div>
 
 <!-- ============================================================
-     NAVBAR — Admin button REMOVED from here
+     NAVBAR: Admin button REMOVED from here
      ============================================================ -->
 <nav id="navbar">
   <div class="nav-inner">
     <a href="#" onclick="navigate('home');return false;" class="nav-logo">
-      <img src="https://i.ibb.co/Y7Bz797K/bcegm-Ccd7z4r-Oem-Fy-Tv7y-M7-Knp7-XTespl-Bq-R8hm-T.png" alt="CBCE Logo" />
-      <img src="https://i.ibb.co/zW9J2MPj/CBCE-SKILL-DEVELOPMENT-copy.png" alt="CBCE Skill Development" class="nav-logo-secondary" />
+      <img src="https://i.ibb.co/zW9J2MPj/CBCE-SKILL-DEVELOPMENT-copy.png" alt="CBCE Skill Development" class="nav-logo-shape" />
     </a>
     <ul class="nav-links" id="nav-ul">
       <li><a href="#" onclick="navClick(event,'home')" data-page="home" class="active-link">Home</a></li>
@@ -849,7 +983,7 @@
       <li><a href="#" onclick="return false;" class="nav-disabled" aria-disabled="true" tabindex="-1">Contact Us</a></li>
     </ul>
     <div class="nav-right">
-      <a href="#contact-cta" class="btn btn-primary btn-sm">Get in Touch</a>
+      <a href="#footer" onclick="scrollToPageEnd(event);" class="btn btn-primary btn-sm">Get in Touch</a>
     </div>
     <button id="hamburger" aria-label="Open menu">
       <span></span><span></span><span></span>
@@ -860,16 +994,16 @@
 <!-- MOBILE NAV -->
 <div id="nav-overlay"></div>
 <div id="mobile-nav">
-  <a href="#" onclick="navigate('home');closeMobileNav();return false;">🏠 Home</a>
-  <a href="#" onclick="return false;" class="nav-disabled" aria-disabled="true" tabindex="-1">ℹ️ About Us</a>
-  <a href="#" onclick="return false;" class="nav-disabled" aria-disabled="true" tabindex="-1">📚 Courses</a>
-  <a href="#" onclick="return false;" class="nav-disabled" aria-disabled="true" tabindex="-1">🎓 Student</a>
-  <a href="#" onclick="return false;" class="nav-disabled" aria-disabled="true" tabindex="-1">🤝 Franchise</a>
-  <a href="#" onclick="return false;" class="nav-disabled" aria-disabled="true" tabindex="-1">⬇️ Download</a>
-  <a href="#" onclick="return false;" class="nav-disabled" aria-disabled="true" tabindex="-1">🖼️ Gallery</a>
-  <a href="#" onclick="return false;" class="nav-disabled" aria-disabled="true" tabindex="-1">📍 Regional Center</a>
-  <a href="#" onclick="return false;" class="nav-disabled" aria-disabled="true" tabindex="-1">📞 Contact Us</a>
-  <a href="#contact-cta" onclick="closeMobileNav();" class="btn btn-primary" style="margin-top:20px;justify-content:center;">Get in Touch</a>
+  <a href="#" onclick="navigate('home');closeMobileNav();return false;"><i class="fas fa-house"></i> Home</a>
+  <a href="#" onclick="return false;" class="nav-disabled" aria-disabled="true" tabindex="-1"><i class="fas fa-circle-info"></i> About Us</a>
+  <a href="#" onclick="return false;" class="nav-disabled" aria-disabled="true" tabindex="-1"><i class="fas fa-book"></i> Courses</a>
+  <a href="#" onclick="return false;" class="nav-disabled" aria-disabled="true" tabindex="-1"><i class="fas fa-graduation-cap"></i> Student</a>
+  <a href="#" onclick="return false;" class="nav-disabled" aria-disabled="true" tabindex="-1"><i class="fas fa-handshake"></i> Franchise</a>
+  <a href="#" onclick="return false;" class="nav-disabled" aria-disabled="true" tabindex="-1"><i class="fas fa-download"></i> Download</a>
+  <a href="#" onclick="return false;" class="nav-disabled" aria-disabled="true" tabindex="-1"><i class="fas fa-images"></i> Gallery</a>
+  <a href="#" onclick="return false;" class="nav-disabled" aria-disabled="true" tabindex="-1"><i class="fas fa-location-dot"></i> Regional Center</a>
+  <a href="#" onclick="return false;" class="nav-disabled" aria-disabled="true" tabindex="-1"><i class="fas fa-phone"></i> Contact Us</a>
+  <a href="#footer" onclick="closeMobileNav();scrollToPageEnd(event);" class="btn btn-primary" style="margin-top:20px;justify-content:center;">Get in Touch</a>
 </div>
 
 <!-- ============================================================
@@ -887,7 +1021,7 @@
       <div class="hero-badge"><span class="dot"></span>ISO 9001:2015 &amp; 21001:2018 Certified</div>
       <h1 class="hero-h1">Continental Board of <span class="accent">Computer Education</span></h1>
       <p class="hero-sub">A Venture of CBCE Skill Development Private Limited</p>
-      <div id="typing-text">India's Best Computer Educational Organisation — Registered under the Ministry of Corporate Affairs, Government of India</div>
+      <div id="typing-text">India's Best Computer Educational Organisation, Registered under the Ministry of Corporate Affairs, Government of India</div>
       <div class="hero-btns">
         <a href="#services" class="btn btn-primary btn-glow"><i class="fas fa-graduation-cap"></i> Student Application</a>
         <a href="#contact-cta" class="btn btn-outline"><i class="fas fa-handshake"></i> Franchisee Application</a>
@@ -913,13 +1047,13 @@
       <div class="notice-tag"><i class="fas fa-bullhorn"></i> LATEST</div>
       <div class="notice-ticker-wrap">
         <div class="notice-ticker">
-          <span>New Project Coming Soon: CBCE E‑BHARAT 2020 — Launching Soon</span>
+          <span>New Project Coming Soon: CBCE E-BHARAT 2020, Launching Soon</span>
           <span>CBCE is an ISO 9001:2015 &amp; 21001:2018 Certified Organisation</span>
           <span>CBCE Logo is Registered under Trade Mark, Govt. of India</span>
           <span>Member of National Board of Quality Promotion (Quality Council of India)</span>
           <span>Registered by NCT, New Delhi &amp; MSME Udyog Aadhar, Government of India</span>
           <span>Franchisee Applications Open Across India</span>
-          <span>New Project Coming Soon: CBCE E‑BHARAT 2020 — Launching Soon</span>
+          <span>New Project Coming Soon: CBCE E-BHARAT 2020, Launching Soon</span>
           <span>CBCE is an ISO 9001:2015 &amp; 21001:2018 Certified Organisation</span>
           <span>CBCE Logo is Registered under Trade Mark, Govt. of India</span>
           <span>Member of National Board of Quality Promotion (Quality Council of India)</span>
@@ -969,7 +1103,7 @@
       <div class="text-center">
         <span class="section-label reveal">Quick Access</span>
         <h2 class="section-title reveal">Student &amp; Franchisee <span>Services</span></h2>
-        <p class="section-sub reveal">Everything you need — from applications to verification — in one place.</p>
+        <p class="section-sub reveal">Everything you need, from applications to verification, in one place.</p>
       </div>
       <div class="grid-4" style="gap:20px;">
         <div class="service-card reveal">
@@ -1005,7 +1139,7 @@
         <div class="service-card reveal">
           <div class="service-icon" style="background:rgba(255,153,51,0.12);color:var(--saffron);"><i class="fas fa-flag"></i></div>
           <h3>CBCE E‑BHARAT</h3>
-          <p>Our upcoming national initiative — launching soon.</p>
+          <p>Our upcoming national initiative, launching soon.</p>
         </div>
         <div class="service-card reveal">
           <div class="service-icon" style="background:rgba(10,37,64,0.08);color:var(--navy);"><i class="fas fa-comment-dots"></i></div>
@@ -1024,16 +1158,20 @@
         <h2 class="section-title reveal">Affiliation <span>With Us</span></h2>
         <p class="section-sub reveal">CBCE is affiliated with and recognised by leading government and quality bodies across India.</p>
       </div>
-      <div class="affil-grid">
-        <div class="affil-badge reveal"><i class="fas fa-copyright"></i><span>Copyright Office, Govt. of India</span></div>
-        <div class="affil-badge reveal"><i class="fas fa-award"></i><span>Quality Council of India</span></div>
-        <div class="affil-badge reveal"><i class="fas fa-certificate"></i><span>BMSCERT</span></div>
-        <div class="affil-badge reveal"><i class="fas fa-landmark"></i><span>Government of India</span></div>
-        <div class="affil-badge reveal"><i class="fas fa-lightbulb"></i><span>Intellectual Property India</span></div>
-        <div class="affil-badge reveal"><i class="fas fa-university"></i><span>NSDL</span></div>
-        <div class="affil-badge reveal"><i class="fas fa-file-invoice-dollar"></i><span>Income Tax Dept., Ministry of Finance</span></div>
-        <div class="affil-badge reveal"><i class="fas fa-cogs"></i><span>TDS Centralised Processing Cell</span></div>
-        <div class="affil-badge reveal"><i class="fas fa-receipt"></i><span>GST</span></div>
+    </div>
+    <!-- Continuous right-to-left marquee. The track holds the badge set twice back
+         to back; animating it exactly -50% creates a seamless, unbroken loop. -->
+    <div class="affil-marquee reveal" role="list" aria-label="CBCE affiliations and recognitions">
+      <div class="affil-track" id="affil-track">
+        <div class="affil-badge" role="listitem"><i class="fas fa-copyright"></i><span>Copyright Office, Govt. of India</span></div>
+        <div class="affil-badge" role="listitem"><i class="fas fa-award"></i><span>Quality Council of India</span></div>
+        <div class="affil-badge" role="listitem"><i class="fas fa-certificate"></i><span>BMSCERT</span></div>
+        <div class="affil-badge" role="listitem"><i class="fas fa-landmark"></i><span>Government of India</span></div>
+        <div class="affil-badge" role="listitem"><i class="fas fa-lightbulb"></i><span>Intellectual Property India</span></div>
+        <div class="affil-badge" role="listitem"><i class="fas fa-university"></i><span>NSDL</span></div>
+        <div class="affil-badge" role="listitem"><i class="fas fa-file-invoice-dollar"></i><span>Income Tax Dept., Ministry of Finance</span></div>
+        <div class="affil-badge" role="listitem"><i class="fas fa-cogs"></i><span>TDS Centralised Processing Cell</span></div>
+        <div class="affil-badge" role="listitem"><i class="fas fa-receipt"></i><span>GST</span></div>
       </div>
     </div>
   </section>
@@ -1053,7 +1191,7 @@
         <div class="info-strip-card reveal">
           <h3><i class="fas fa-address-book"></i> Quick Contact</h3>
           <p style="margin-bottom:8px;">CBCE Skill Development Private Limited</p>
-          <p style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><i class="fas fa-map-marker-alt" style="color:var(--saffron);"></i> Kumarghat, Unakoti, Tripura, India — 799264</p>
+          <p style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><i class="fas fa-map-marker-alt" style="color:var(--saffron);"></i> Kumarghat, Unakoti, Tripura, India, 799264</p>
           <p style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><i class="fas fa-phone-alt" style="color:var(--green);"></i> 98627 64117</p>
           <p style="display:flex;align-items:center;gap:8px;"><i class="fas fa-envelope" style="color:var(--navy);"></i> info@cbceindia.com</p>
         </div>
@@ -1065,7 +1203,7 @@
   <div class="cta-banner" id="contact-cta">
     <div class="container text-center">
       <h2 class="reveal">Join <span style="color:var(--white);text-decoration:underline;text-decoration-color:var(--saffron);">CBCE</span> Today</h2>
-      <p class="reveal">Become a student, verify your certification, or start your own CBCE franchise — get in touch with our team.</p>
+      <p class="reveal">Become a student, verify your certification, or start your own CBCE franchise. Get in touch with our team.</p>
       <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;" class="reveal">
         <a href="mailto:info@cbceindia.com" class="btn btn-outline" style="border-color:white;color:white;font-size:1rem;padding:16px 36px;"><i class="fas fa-envelope"></i> Email Us</a>
         <a href="tel:+919862764117" class="btn" style="background:white;color:var(--green);font-size:1rem;padding:16px 36px;font-weight:700;"><i class="fas fa-phone"></i> Call Helpline</a>
@@ -1088,7 +1226,7 @@
           <span class="section-label">About ICAT</span>
           <h2 class="section-title">India's Premier <span>Computer Training</span> Institute</h2>
           <p style="color:var(--text-mid);font-size:0.97rem;line-height:1.8;margin-bottom:24px;">
-            ICAT — Institute For Computer Assessment &amp; Training — delivers practical computer education and certified skill development to students across India. Our programs are designed for fast learning, strong results, and real career readiness.
+            ICAT (Institute For Computer Assessment &amp; Training) delivers practical computer education and certified skill development to students across India. Our programs are designed for fast learning, strong results, and real career readiness.
           </p>
           <div class="about-features">
             <div class="about-feature-item"><div class="aff-icon"><i class="fas fa-award"></i></div><div class="aff-text"><h4>Govt. Recognized</h4><p>Official certifications accepted nationwide</p></div></div>
@@ -1103,8 +1241,8 @@
         </div>
       </div>
       <div class="mv-cards reveal" style="margin-top:60px;">
-        <div class="mv-card mission"><div class="mv-icon">🎯</div><h3>Our Mission</h3><p>To provide accessible, affordable, and quality computer education and skill development programs that empower individuals with digital competencies required to thrive in the modern economy.</p></div>
-        <div class="mv-card vision"><div class="mv-icon">🔭</div><h3>Our Vision</h3><p>To become India's most trusted digital education ecosystem — where every student gains skills, confidence, and opportunities to build a prosperous career in the technology-driven world.</p></div>
+        <div class="mv-card mission"><div class="mv-icon"><i class="fas fa-bullseye"></i></div><h3>Our Mission</h3><p>To provide accessible, affordable, and quality computer education and skill development programs that empower individuals with digital competencies required to thrive in the modern economy.</p></div>
+        <div class="mv-card vision"><div class="mv-icon"><i class="fas fa-eye"></i></div><h3>Our Vision</h3><p>To become India's most trusted digital education ecosystem, where every student gains skills, confidence, and opportunities to build a prosperous career in the technology-driven world.</p></div>
       </div>
       <div class="text-center reveal" style="margin-top:56px;margin-bottom:32px;">
         <span class="section-label">Our Journey</span>
@@ -1131,15 +1269,15 @@
         <p class="section-sub reveal">Industry-aligned programs designed to make you job-ready from day one. Practical training with recognized certifications.</p>
       </div>
       <div class="courses-grid">
-        <div class="course-card reveal"><div class="course-icon">💻</div><span class="course-tag">Foundation</span><h3>Computer Fundamentals</h3><p>Master the basics of computers, operating systems, internet, and essential software for everyday digital tasks.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 1–2 Months</span><span><i class="fas fa-user"></i> Beginner</span></div><a href="#" onclick="navigate('contact');return false;" class="btn btn-navy btn-sm">Learn More <i class="fas fa-arrow-right"></i></a></div>
-        <div class="course-card reveal"><div class="course-icon">📂</div><span class="course-tag">Diploma</span><h3>DCA — Diploma in Computer Applications</h3><p>Comprehensive diploma covering MS Office, internet applications, and basic accounting tools.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 6 Months</span><span><i class="fas fa-user"></i> Beginner</span></div><a href="#" onclick="navigate('contact');return false;" class="btn btn-navy btn-sm">Learn More <i class="fas fa-arrow-right"></i></a></div>
-        <div class="course-card reveal"><div class="course-icon">🎓</div><span class="course-tag">Advanced</span><h3>ADCA — Advanced Diploma in Computer Applications</h3><p>Advanced-level curriculum with programming, database management, Tally, and web basics.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 12 Months</span><span><i class="fas fa-user"></i> Intermediate</span></div><a href="#" onclick="navigate('contact');return false;" class="btn btn-navy btn-sm">Learn More <i class="fas fa-arrow-right"></i></a></div>
-        <div class="course-card reveal"><div class="course-icon">📊</div><span class="course-tag">Accounting</span><h3>Tally Prime with GST</h3><p>Complete Tally Prime training including GST, inventory management, payroll and financial reports.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 3 Months</span><span><i class="fas fa-user"></i> Beginner</span></div><a href="#" onclick="navigate('contact');return false;" class="btn btn-navy btn-sm">Learn More <i class="fas fa-arrow-right"></i></a></div>
-        <div class="course-card reveal"><div class="course-icon">🎨</div><span class="course-tag">Creative</span><h3>Graphic Design</h3><p>Photoshop, Illustrator, CorelDRAW, and Canva — design logos, banners, and marketing materials.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 3–6 Months</span><span><i class="fas fa-user"></i> Beginner</span></div><a href="#" onclick="navigate('contact');return false;" class="btn btn-navy btn-sm">Learn More <i class="fas fa-arrow-right"></i></a></div>
-        <div class="course-card reveal"><div class="course-icon">🌐</div><span class="course-tag">Tech</span><h3>Web Development</h3><p>Full-stack web development with HTML, CSS, JavaScript, PHP, MySQL and modern frameworks.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 6–12 Months</span><span><i class="fas fa-user"></i> Intermediate</span></div><a href="#" onclick="navigate('contact');return false;" class="btn btn-navy btn-sm">Learn More <i class="fas fa-arrow-right"></i></a></div>
-        <div class="course-card reveal"><div class="course-icon">📣</div><span class="course-tag">Marketing</span><h3>Digital Marketing</h3><p>SEO, SEM, Social Media Marketing, Content Creation, Email Marketing and Google Analytics.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 3–6 Months</span><span><i class="fas fa-user"></i> Beginner</span></div><a href="#" onclick="navigate('contact');return false;" class="btn btn-navy btn-sm">Learn More <i class="fas fa-arrow-right"></i></a></div>
+        <div class="course-card reveal"><div class="course-icon"><i class="fas fa-desktop"></i></div><span class="course-tag">Foundation</span><h3>Computer Fundamentals</h3><p>Master the basics of computers, operating systems, internet, and essential software for everyday digital tasks.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 1–2 Months</span><span><i class="fas fa-user"></i> Beginner</span></div><a href="#" onclick="navigate('contact');return false;" class="btn btn-navy btn-sm">Learn More <i class="fas fa-arrow-right"></i></a></div>
+        <div class="course-card reveal"><div class="course-icon"><i class="fas fa-folder-open"></i></div><span class="course-tag">Diploma</span><h3>DCA: Diploma in Computer Applications</h3><p>Comprehensive diploma covering MS Office, internet applications, and basic accounting tools.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 6 Months</span><span><i class="fas fa-user"></i> Beginner</span></div><a href="#" onclick="navigate('contact');return false;" class="btn btn-navy btn-sm">Learn More <i class="fas fa-arrow-right"></i></a></div>
+        <div class="course-card reveal"><div class="course-icon"><i class="fas fa-graduation-cap"></i></div><span class="course-tag">Advanced</span><h3>ADCA: Advanced Diploma in Computer Applications</h3><p>Advanced-level curriculum with programming, database management, Tally, and web basics.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 12 Months</span><span><i class="fas fa-user"></i> Intermediate</span></div><a href="#" onclick="navigate('contact');return false;" class="btn btn-navy btn-sm">Learn More <i class="fas fa-arrow-right"></i></a></div>
+        <div class="course-card reveal"><div class="course-icon"><i class="fas fa-chart-column"></i></div><span class="course-tag">Accounting</span><h3>Tally Prime with GST</h3><p>Complete Tally Prime training including GST, inventory management, payroll and financial reports.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 3 Months</span><span><i class="fas fa-user"></i> Beginner</span></div><a href="#" onclick="navigate('contact');return false;" class="btn btn-navy btn-sm">Learn More <i class="fas fa-arrow-right"></i></a></div>
+        <div class="course-card reveal"><div class="course-icon"><i class="fas fa-palette"></i></div><span class="course-tag">Creative</span><h3>Graphic Design</h3><p>Photoshop, Illustrator, CorelDRAW, and Canva. Design logos, banners, and marketing materials.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 3–6 Months</span><span><i class="fas fa-user"></i> Beginner</span></div><a href="#" onclick="navigate('contact');return false;" class="btn btn-navy btn-sm">Learn More <i class="fas fa-arrow-right"></i></a></div>
+        <div class="course-card reveal"><div class="course-icon"><i class="fas fa-globe"></i></div><span class="course-tag">Tech</span><h3>Web Development</h3><p>Full-stack web development with HTML, CSS, JavaScript, PHP, MySQL and modern frameworks.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 6–12 Months</span><span><i class="fas fa-user"></i> Intermediate</span></div><a href="#" onclick="navigate('contact');return false;" class="btn btn-navy btn-sm">Learn More <i class="fas fa-arrow-right"></i></a></div>
+        <div class="course-card reveal"><div class="course-icon"><i class="fas fa-bullhorn"></i></div><span class="course-tag">Marketing</span><h3>Digital Marketing</h3><p>SEO, SEM, Social Media Marketing, Content Creation, Email Marketing and Google Analytics.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 3–6 Months</span><span><i class="fas fa-user"></i> Beginner</span></div><a href="#" onclick="navigate('contact');return false;" class="btn btn-navy btn-sm">Learn More <i class="fas fa-arrow-right"></i></a></div>
         <div class="course-card reveal"><div class="course-icon">⌨️</div><span class="course-tag">Skill</span><h3>Data Entry Operator</h3><p>Professional data entry, typing speed building, MS Excel, and database management skills.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 2–3 Months</span><span><i class="fas fa-user"></i> Beginner</span></div><a href="#" onclick="navigate('contact');return false;" class="btn btn-navy btn-sm">Learn More <i class="fas fa-arrow-right"></i></a></div>
-        <div class="course-card reveal"><div class="course-icon">🗣️</div><span class="course-tag">Language</span><h3>Spoken English</h3><p>Build confidence in spoken English with grammar, pronunciation, conversation and interview prep.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 3 Months</span><span><i class="fas fa-user"></i> All Levels</span></div><a href="#" onclick="navigate('contact');return false;" class="btn btn-navy btn-sm">Learn More <i class="fas fa-arrow-right"></i></a></div>
+        <div class="course-card reveal"><div class="course-icon"><i class="fas fa-comments"></i></div><span class="course-tag">Language</span><h3>Spoken English</h3><p>Build confidence in spoken English with grammar, pronunciation, conversation and interview prep.</p><div class="course-meta"><span><i class="fas fa-clock"></i> 3 Months</span><span><i class="fas fa-user"></i> All Levels</span></div><a href="#" onclick="navigate('contact');return false;" class="btn btn-navy btn-sm">Learn More <i class="fas fa-arrow-right"></i></a></div>
       </div>
       <div class="text-center" style="margin-top:40px;"><a href="#" onclick="navigate('contact');return false;" class="btn btn-primary"><i class="fas fa-list-alt"></i> View All Programs &amp; Enquire</a></div>
     </div>
@@ -1182,15 +1320,15 @@
         <h2 class="section-title">Franchise <span>Benefits</span></h2>
       </div>
       <div class="franchise-benefits">
-        <div class="fb-card reveal"><div class="fb-icon">💰</div><h4>Low Investment</h4><p>Start with minimal capital. Our affordable franchise model ensures quick ROI.</p></div>
-        <div class="fb-card reveal"><div class="fb-icon">🎓</div><h4>Complete Training</h4><p>Comprehensive onboarding, teacher training, and operational support provided.</p></div>
-        <div class="fb-card reveal"><div class="fb-icon">📢</div><h4>Marketing Support</h4><p>Branding material, digital marketing, and admission campaign support.</p></div>
-        <div class="fb-card reveal"><div class="fb-icon">📚</div><h4>Ready Curriculum</h4><p>Pre-built, industry-ready course content and study material provided.</p></div>
-        <div class="fb-card reveal"><div class="fb-icon">🏆</div><h4>Brand Recognition</h4><p>Leverage ICAT's 15+ years of brand trust and national certification authority.</p></div>
-        <div class="fb-card reveal"><div class="fb-icon">🛠️</div><h4>Full Tech Support</h4><p>Student management software, online admission portal, and certificate system.</p></div>
+        <div class="fb-card reveal"><div class="fb-icon"><i class="fas fa-sack-dollar"></i></div><h4>Low Investment</h4><p>Start with minimal capital. Our affordable franchise model ensures quick ROI.</p></div>
+        <div class="fb-card reveal"><div class="fb-icon"><i class="fas fa-graduation-cap"></i></div><h4>Complete Training</h4><p>Comprehensive onboarding, teacher training, and operational support provided.</p></div>
+        <div class="fb-card reveal"><div class="fb-icon"><i class="fas fa-bullhorn"></i></div><h4>Marketing Support</h4><p>Branding material, digital marketing, and admission campaign support.</p></div>
+        <div class="fb-card reveal"><div class="fb-icon"><i class="fas fa-book"></i></div><h4>Ready Curriculum</h4><p>Pre-built, industry-ready course content and study material provided.</p></div>
+        <div class="fb-card reveal"><div class="fb-icon"><i class="fas fa-trophy"></i></div><h4>Brand Recognition</h4><p>Leverage ICAT's 15+ years of brand trust and national certification authority.</p></div>
+        <div class="fb-card reveal"><div class="fb-icon"><i class="fas fa-screwdriver-wrench"></i></div><h4>Full Tech Support</h4><p>Student management software, online admission portal, and certificate system.</p></div>
       </div>
       <div class="franchise-form-wrap reveal" id="franchise-form">
-        <h3>📋 Franchise Enquiry Form</h3>
+        <h3><i class="fas fa-clipboard-list"></i> Franchise Enquiry Form</h3>
         <div class="form-grid">
           <div class="form-group"><label>Full Name *</label><input type="text" id="ff-name" placeholder="Your full name" /></div>
           <div class="form-group"><label>Mobile Number *</label><input type="tel" id="ff-phone" placeholder="+91 XXXXX XXXXX" /></div>
@@ -1228,7 +1366,7 @@
         <div class="ps-card reveal"><div class="ps-num"><span class="count" data-target="8000">0</span><span class="plus">+</span></div><div class="ps-label">Placements Done</div></div>
       </div>
       <div class="companies-wrap reveal">
-        <h3>🏢 Our Hiring Partners</h3>
+        <h3><i class="fas fa-building"></i> Our Hiring Partners</h3>
         <div class="companies-logos">
           <div class="company-logo-card"><i class="fas fa-building"></i> Infosys</div>
           <div class="company-logo-card"><i class="fas fa-building"></i> Wipro</div>
@@ -1353,7 +1491,7 @@
           <div class="map-placeholder"><i class="fas fa-map-marked-alt" style="font-size:2rem;"></i><span>Map · New Delhi, India<br /><small style="opacity:0.6;">Interactive map at icatinstitute.in</small></span></div>
         </div>
         <div class="contact-form-card reveal-right">
-          <h3>📩 Send Us a Message</h3>
+          <h3><i class="fas fa-paper-plane"></i> Send Us a Message</h3>
           <div class="form-grid">
             <div class="form-group"><label>Full Name *</label><input type="text" id="cf-name" placeholder="Your full name" /></div>
             <div class="form-group"><label>Mobile Number *</label><input type="tel" id="cf-phone" placeholder="+91 XXXXX XXXXX" /></div>
@@ -1380,7 +1518,7 @@
       <div class="footer-grid">
         <div class="footer-brand">
           <img src="https://i.ibb.co/Y7Bz797K/bcegm-Ccd7z4r-Oem-Fy-Tv7y-M7-Knp7-XTespl-Bq-R8hm-T.png" alt="CBCE Logo" />
-          <p>Continental Board of Computer Education — a venture of CBCE Skill Development Private Limited. An ISO 9001:2015 &amp; 21001:2018 certified organisation, registered under the Ministry of Corporate Affairs, Government of India.</p>
+          <p>Continental Board of Computer Education, a venture of CBCE Skill Development Private Limited. An ISO 9001:2015 &amp; 21001:2018 certified organisation, registered under the Ministry of Corporate Affairs, Government of India.</p>
           <div class="social-bar" style="margin-top:16px;">
             <a href="#" class="soc-btn soc-fb"><i class="fab fa-facebook-f"></i></a>
             <a href="#" class="soc-btn soc-tw"><i class="fab fa-twitter"></i></a>
@@ -1416,7 +1554,7 @@
         <div class="footer-col">
           <h4>Contact &amp; Newsletter</h4>
           <div class="footer-contact-items">
-            <div class="footer-contact-item"><i class="fas fa-map-marker-alt"></i><span>Kumarghat, Unakoti, Tripura, India — 799264</span></div>
+            <div class="footer-contact-item"><i class="fas fa-map-marker-alt"></i><span>Kumarghat, Unakoti, Tripura, India, 799264</span></div>
             <div class="footer-contact-item"><i class="fas fa-phone-alt"></i><a href="tel:+919862764117" style="color:rgba(255,255,255,0.75);text-decoration:none;">98627 64117</a></div>
             <div class="footer-contact-item"><i class="fas fa-envelope"></i><a href="mailto:info@cbceindia.com" style="color:rgba(255,255,255,0.75);text-decoration:none;">info@cbceindia.com</a></div>
           </div>
@@ -1451,6 +1589,89 @@
      JAVASCRIPT
      ============================================================ -->
 <script>
+  /* ============================================================
+     ANIMATED ICON ENGINE (self-contained, CSS-only)
+     Every <i class="fas/fab fa-*"> is wrapped in a .ico-wrap span and tagged with
+     a data-ico-fx animation style based on what it represents (see FX_MAP). All
+     motion is plain CSS (@keyframes, see ANIMATED ICON ENGINE in <style> above):
+     a one-time entrance pop when the icon scrolls into view, then a continuous
+     themed micro-animation on hover. There is no external icon CDN, no per-icon
+     network fetch, and no custom element to wait on, so icons render and animate
+     identically every time regardless of network conditions.
+     ============================================================ */
+  (function () {
+    // Font Awesome class -> hover animation style.
+    const FX_MAP = {
+      'fa-home':'bounce','fa-house':'bounce','fa-graduation-cap':'wobble','fa-handshake':'wobble',
+      'fa-certificate':'pulse','fa-book-open':'float','fa-book':'float','fa-arrow-right':'bounce',
+      'fa-arrow-up':'bounce','fa-chevron-up':'bounce','fa-clock':'spin','fa-user':'float',
+      'fa-user-check':'float','fa-user-graduate':'wobble','fa-building':'float','fa-university':'float',
+      'fa-award':'pulse','fa-trophy':'pulse','fa-copyright':'pulse','fa-landmark':'float',
+      'fa-lightbulb':'pulse','fa-eye':'float','fa-bullseye':'pulse','fa-file-invoice-dollar':'float',
+      'fa-sack-dollar':'bounce','fa-cogs':'spin','fa-screwdriver-wrench':'spin','fa-receipt':'float',
+      'fa-info-circle':'float','fa-circle-info':'float','fa-newspaper':'float','fa-address-book':'float',
+      'fa-map-marker-alt':'bounce','fa-location-dot':'bounce','fa-map-marked-alt':'bounce',
+      'fa-phone':'wobble','fa-phone-alt':'wobble','fa-envelope':'float','fa-paper-plane':'bounce',
+      'fa-plus':'spin','fa-times':'spin','fa-star':'pulse','fa-medal':'pulse','fa-shield-alt':'pulse',
+      'fa-stamp':'pulse','fa-flag':'wobble','fa-globe':'spin','fa-globe-asia':'spin','fa-key':'wobble',
+      'fa-laptop-code':'float','fa-desktop':'float','fa-chalkboard-teacher':'wobble','fa-briefcase':'float',
+      'fa-bullhorn':'wobble','fa-comment-dots':'wobble','fa-comments':'wobble','fa-hand-holding-heart':'wobble',
+      'fa-file-contract':'float','fa-list-alt':'float','fa-clipboard-list':'float','fa-qrcode':'pulse',
+      'fa-headset':'wobble','fa-download':'bounce','fa-images':'float','fa-palette':'wobble',
+      'fa-folder-open':'bounce','fa-chart-column':'bounce','fa-check-circle':'pulse',
+      'fa-exclamation-circle':'wobble','fa-facebook-f':'wobble','fa-twitter':'wobble',
+      'fa-linkedin-in':'wobble','fa-youtube':'wobble','fa-whatsapp':'wobble','fa-instagram':'wobble',
+      'fa-question':'wobble'
+    };
+
+    function fontAwesomeClass(i) {
+      return Array.from(i.classList).find(c => c.startsWith('fa-') && c !== 'fa-fw');
+    }
+
+    function wrapIcon(i) {
+      if (i.closest('.ico-wrap')) return; // already wrapped
+      const faClass = fontAwesomeClass(i);
+      const fx = faClass ? (FX_MAP[faClass] || 'bounce') : 'bounce';
+
+      const wrap = document.createElement('span');
+      wrap.className = 'ico-wrap';
+      wrap.setAttribute('data-ico-fx', fx);
+      i.parentNode.insertBefore(wrap, i);
+      wrap.appendChild(i);
+    }
+
+    function wrapAll(root) {
+      (root || document).querySelectorAll('i.fas, i.fab').forEach(wrapIcon);
+    }
+
+    wrapAll(document);
+
+    // Entrance animation: pop each icon in once, the first time it's on screen.
+    const io = ('IntersectionObserver' in window)
+      ? new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('icon-in');
+              io.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.2 })
+      : null;
+
+    function observeAll(root) {
+      (root || document).querySelectorAll('.ico-wrap').forEach(w => {
+        if (io) io.observe(w); else w.classList.add('icon-in');
+      });
+    }
+    observeAll(document);
+
+    // Re-run for any icons injected later (e.g. toasts, dynamic content).
+    window.enhanceNewIcons = function (root) {
+      wrapAll(root || document);
+      observeAll(root || document);
+    };
+  })();
+
   /* ============================
      PRELOADER
      ============================ */
@@ -1477,6 +1698,7 @@
     const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle';
     t.innerHTML = `<i class="fas fa-${icon}"></i> ${msg}`;
     wrap.appendChild(t);
+    if (window.enhanceNewIcons) window.enhanceNewIcons(t);
     setTimeout(() => { t.style.transition = 'opacity .4s'; t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 3200);
   }
 
@@ -1564,6 +1786,26 @@
   }
 
   /* ============================
+     AFFILIATION MARQUEE: duplicate the track once so the -50% keyframe
+     produces a perfectly seamless, continuous right-to-left loop.
+     ============================ */
+  (function () {
+    const track = document.getElementById('affil-track');
+    if (!track) return;
+    track.insertAdjacentHTML('beforeend', track.innerHTML);
+  })();
+
+  /* ============================
+     "GET IN TOUCH" -> BOTTOM OF PAGE
+     Scrolls all the way to the document end (the footer), on whichever page is
+     currently active, rather than to the mid-page contact banner.
+     ============================ */
+  function scrollToPageEnd(e) {
+    if (e) e.preventDefault();
+    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+  }
+
+  /* ============================
      REVEAL ANIMATIONS
      ============================ */
   let revealObs;
@@ -1621,13 +1863,18 @@
 
     function resize() { W = canvas.width = canvas.offsetWidth; H = canvas.height = canvas.offsetHeight; }
 
+    // Tricolor particle palette: saffron, white, green, echoing the hero's accent
+    // strip, weighted so white (the connective, most numerous color) dominates softly.
+    const PARTICLE_COLORS = ['#FF9933', '#FF9933', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#138808', '#138808'];
+
     function Particle() {
       this.x = Math.random() * W; this.y = Math.random() * H;
-      this.r = Math.random() * 2 + 0.5; this.vx = (Math.random() - 0.5) * 0.6; this.vy = (Math.random() - 0.5) * 0.6;
-      this.alpha = Math.random() * 0.6 + 0.2; this.color = Math.random() > 0.7 ? '#F2142F' : 'rgba(255,255,255,0.8)';
+      this.r = Math.random() * 2.2 + 0.6; this.vx = (Math.random() - 0.5) * 0.5; this.vy = (Math.random() - 0.5) * 0.5;
+      this.alpha = Math.random() * 0.55 + 0.25;
+      this.color = PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)];
     }
 
-    function initP() { particles = []; for (let i = 0; i < 80; i++) particles.push(new Particle()); }
+    function initP() { particles = []; const count = W < 640 ? 40 : 80; for (let i = 0; i < count; i++) particles.push(new Particle()); }
 
     function draw() {
       ctx.clearRect(0, 0, W, H);
@@ -1662,10 +1909,10 @@
     const el = document.getElementById('typing-text');
     if (!el) return;
     const texts = [
-      'ISO 9001:2015 & 21001:2018 Certified Organisation 🏆',
-      'Registered under the Ministry of Corporate Affairs, Govt. of India 🇮🇳',
-      'CBCE Logo Registered under Trade Mark, Govt. of India 📜',
-      'Member of Quality Council of India — National Board of Quality Promotion 🤝'
+      'ISO 9001:2015 & 21001:2018 Certified Organisation',
+      'Registered under the Ministry of Corporate Affairs, Govt. of India',
+      'CBCE Logo Registered under Trade Mark, Govt. of India',
+      'Member of Quality Council of India, National Board of Quality Promotion'
     ];
     let ti = 0, ci = 0, typing = true, current = '';
     function type() {
@@ -1713,23 +1960,23 @@
     const name    = document.getElementById('cf-name').value.trim();
     const phone   = document.getElementById('cf-phone').value.trim();
     const message = document.getElementById('cf-message').value.trim();
-    if (!name || !phone || !message) { showToast('⚠️ Please fill all required fields.', 'error'); return; }
-    showToast("✅ Message sent! We'll contact you within 24 hours.", 'success');
+    if (!name || !phone || !message) { showToast('Please fill all required fields.', 'error'); return; }
+    showToast("Message sent! We'll contact you within 24 hours.", 'success');
     ['cf-name','cf-phone','cf-email','cf-course','cf-message'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   }
 
   function submitFranchiseForm() {
     const name  = document.getElementById('ff-name').value.trim();
     const phone = document.getElementById('ff-phone').value.trim();
-    if (!name || !phone) { showToast('⚠️ Name and mobile number are required.', 'error'); return; }
-    showToast('✅ Franchise enquiry submitted! Our team will reach you within 48 hours.', 'success');
+    if (!name || !phone) { showToast('Name and mobile number are required.', 'error'); return; }
+    showToast('Franchise enquiry submitted! Our team will reach you within 48 hours.', 'success');
     ['ff-name','ff-phone','ff-email','ff-city','ff-state','ff-budget','ff-message'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   }
 
   function subscribeNewsletter(btn) {
     const input = btn.previousElementSibling;
-    if (!input.value || !input.value.includes('@')) { showToast("⚠️ Please enter a valid email address.", 'error'); return; }
-    showToast("✅ Subscribed! You'll receive updates from CBCE.", 'success');
+    if (!input.value || !input.value.includes('@')) { showToast("Please enter a valid email address.", 'error'); return; }
+    showToast("Subscribed! You'll receive updates from CBCE.", 'success');
     input.value = '';
   }
 
