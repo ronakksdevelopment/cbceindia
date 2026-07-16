@@ -60,8 +60,26 @@
     }
 
     *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
-    html { scroll-behavior:smooth; font-size:16px; }
-    body { font-family:var(--font-main); color:var(--text-dark); background:var(--white); overflow-x:hidden; line-height:1.6; }
+    html { scroll-behavior:smooth; font-size:16px; height:100%; }
+    body { font-family:var(--font-main); color:var(--text-dark); background:var(--white); overflow-x:hidden; line-height:1.6; overscroll-behavior-y:none; }
+
+    /* ------------------------------------------------------------
+       SCROLL-LOCK STATE (see UNIFIED SCROLL-LOCK SYSTEM in <script>)
+       Applied to <body> whenever any overlay/modal/panel/chat window
+       is open, so the background page itself cannot scroll, on
+       desktop or mobile, while the active overlay still scrolls
+       normally within its own container. ------------------------------------------------------------ */
+    body.scroll-locked { overflow:hidden; touch-action:none; }
+    html:has(body.scroll-locked) { overflow:hidden; }
+
+    /* Any element that owns its own internal scrolling gets scroll
+       containment so wheel/touch input never "chains" through to the
+       page behind it once the element's own scroll range is exhausted. */
+    .crono-body, #mobile-nav, .adm-sidebar, .adm-main, .phone-screen,
+    .phone-app-switcher-list, #lightbox {
+      overscroll-behavior:contain;
+      -webkit-overflow-scrolling:touch;
+    }
 
     ::-webkit-scrollbar       { width:7px; }
     ::-webkit-scrollbar-track { background:var(--bg-gray); }
@@ -744,6 +762,150 @@
     .newsletter-form button:hover { background:#d10d24; }
     .footer-bottom { border-top:1px solid rgba(255,255,255,0.08); padding:20px 0; display:flex; align-items:center; justify-content:space-between; font-size:0.83rem; flex-wrap:wrap; gap:10px; }
     .footer-bottom a { color:var(--crimson); text-decoration:none; }
+
+    /* ============================================================
+       FOOTER MINI SMARTPHONE WIDGET
+       A self-contained, portrait 3:4 miniature phone UI embedded in the
+       footer's right-hand column. Fully independent from the main site:
+       its own internal "screens" (home / app / recent-apps), its own
+       per-app navigation history, and its own isolated scroll region.
+       ============================================================ */
+    .footer-phone-col { display:flex; flex-direction:column; align-items:flex-start; }
+    .phone-widget { display:flex; justify-content:center; width:100%; margin-top:4px; }
+
+    .phone-device {
+      position:relative;
+      width:100%;
+      max-width:184px;
+      background:linear-gradient(160deg,#1b1b1f,#0a0a0c);
+      border-radius:26px;
+      padding:9px 9px 0;
+      box-shadow:0 18px 40px rgba(0,0,0,0.45), inset 0 0 0 2px rgba(255,255,255,0.06);
+      display:flex; flex-direction:column;
+      border:1px solid rgba(255,255,255,0.08);
+    }
+    .phone-notch {
+      position:absolute; top:9px; left:50%; transform:translateX(-50%);
+      width:44%; height:16px; background:#0a0a0c; border-radius:0 0 12px 12px; z-index:5;
+    }
+    .phone-notch::after {
+      content:''; position:absolute; top:5px; left:50%; transform:translateX(-50%);
+      width:28px; height:5px; border-radius:99px; background:rgba(255,255,255,0.12);
+    }
+
+    /* The mobile "screen" itself — the actual internal viewport that loads
+       web content — is a true portrait 3:4 aspect ratio per spec. The
+       device chrome (notch above, nav bar below) sits outside this box. */
+    .phone-screen {
+      position:relative; width:100%; aspect-ratio:3/4; flex-shrink:0;
+      background:var(--bg-gray); border-radius:18px 18px 6px 6px;
+      overflow:hidden; isolation:isolate;
+    }
+    .phone-view {
+      position:absolute; inset:0; display:none; flex-direction:column;
+      overflow-y:auto; overflow-x:hidden; background:var(--bg-gray);
+      overscroll-behavior:contain; -webkit-overflow-scrolling:touch;
+    }
+    .phone-view.active { display:flex; animation:phoneViewIn 0.25s ease both; }
+    @keyframes phoneViewIn { from{opacity:0;transform:scale(0.97);} to{opacity:1;transform:scale(1);} }
+
+    .phone-status-bar {
+      flex-shrink:0; display:flex; align-items:center; justify-content:space-between;
+      padding:7px 12px 4px; font-size:0.55rem; font-weight:700; color:var(--navy);
+    }
+    .phone-status-icons { display:flex; gap:4px; font-size:0.5rem; }
+
+    /* ---- Home screen ---- */
+    .phone-home-title { padding:2px 14px 8px; color:var(--navy); }
+    .phone-home-title span { display:block; font-weight:800; font-size:0.8rem; font-family:var(--font-display); }
+    .phone-home-title small { display:block; font-size:0.5rem; color:var(--text-mid); margin-top:1px; }
+    .phone-app-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px 10px; padding:6px 14px 14px; }
+    .phone-app-icon {
+      background:none; border:none; cursor:pointer; padding:0;
+      display:flex; flex-direction:column; align-items:center; gap:4px;
+      font-family:var(--font-main); transition:var(--transition);
+    }
+    .phone-app-icon:hover { transform:translateY(-2px); }
+    .phone-app-icon:focus-visible { outline:2px solid var(--saffron); outline-offset:3px; border-radius:12px; }
+    .phone-app-glyph {
+      width:38px; height:38px; border-radius:11px; display:flex; align-items:center; justify-content:center;
+      color:#fff; font-size:0.95rem; box-shadow:0 4px 10px rgba(10,37,64,0.18);
+    }
+    .app-facebook { background:#1877f2; }
+    .app-x        { background:#0a0a0a; }
+    .app-instagram{ background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888); }
+    .app-youtube  { background:#ff0000; }
+    .phone-app-label { font-size:0.52rem; font-weight:600; color:var(--navy); text-align:center; line-height:1.2; }
+
+    /* ---- App view (iframe host) ---- */
+    .phone-app-topbar {
+      flex-shrink:0; display:flex; align-items:center; justify-content:space-between;
+      padding:6px 10px; background:var(--navy); color:#fff; font-size:0.55rem; font-weight:700;
+    }
+    .phone-app-topbar-status { font-size:0.6rem; opacity:0.85; }
+    .phone-app-topbar-status.hidden { visibility:hidden; }
+    .phone-app-frame-wrap { position:relative; flex:1; min-height:0; background:#fff; }
+    .phone-app-frame-wrap iframe {
+      position:absolute; inset:0; width:100%; height:100%; border:0; display:none; background:#fff;
+    }
+    .phone-app-frame-wrap iframe.active { display:block; }
+
+    /* ---- Fallback screen (iframe embedding blocked) ---- */
+    .phone-fallback {
+      position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center;
+      text-align:center; padding:16px 14px; gap:10px; background:linear-gradient(160deg,#ffffff,var(--bg-gray));
+    }
+    .phone-fallback.active { display:flex; }
+    .phone-fallback-icon {
+      width:46px; height:46px; border-radius:14px; display:flex; align-items:center; justify-content:center;
+      color:#fff; font-size:1.15rem; box-shadow:0 6px 16px rgba(10,37,64,0.22);
+    }
+    .phone-fallback h5 { font-size:0.68rem; font-weight:800; color:var(--navy); }
+    .phone-fallback p  { font-size:0.52rem; color:var(--text-mid); line-height:1.5; max-width:130px; }
+    .phone-fallback-btn {
+      margin-top:2px; border:none; cursor:pointer; font-family:var(--font-main);
+      background:var(--navy); color:#fff; font-size:0.55rem; font-weight:700;
+      padding:8px 14px; border-radius:99px; display:inline-flex; align-items:center; gap:6px;
+      transition:var(--transition);
+    }
+    .phone-fallback-btn:hover { background:var(--saffron-dark); transform:translateY(-1px); }
+
+    /* ---- Recent Apps (app switcher) ---- */
+    .phone-switcher-title { flex-shrink:0; padding:2px 14px 8px; font-size:0.68rem; font-weight:800; color:var(--navy); }
+    .phone-app-switcher-list { flex:1; min-height:0; overflow-y:auto; padding:2px 12px 12px; display:flex; flex-direction:column; gap:8px; overscroll-behavior:contain; }
+    .phone-switch-card {
+      display:flex; align-items:center; gap:10px; background:#fff; border:1px solid rgba(10,37,64,0.08);
+      border-radius:12px; padding:8px 10px; cursor:pointer; transition:var(--transition); text-align:left;
+      font-family:var(--font-main); width:100%;
+    }
+    .phone-switch-card:hover { border-color:var(--saffron); transform:translateX(2px); }
+    .phone-switch-card .phone-app-glyph { width:26px; height:26px; font-size:0.65rem; border-radius:8px; flex-shrink:0; }
+    .phone-switch-card span { font-size:0.6rem; font-weight:700; color:var(--navy); }
+    .phone-switcher-empty { padding:20px 14px; text-align:center; font-size:0.55rem; color:var(--text-light); }
+
+    /* ---- Android-style bottom nav bar ---- */
+    .phone-navbar {
+      flex-shrink:0; height:34px; display:flex; align-items:center; justify-content:space-around;
+      background:#111114; border-radius:0 0 6px 6px;
+    }
+    .phone-nav-btn {
+      background:none; border:none; color:rgba(255,255,255,0.75); cursor:pointer;
+      width:34px; height:26px; display:flex; align-items:center; justify-content:center;
+      font-size:0.7rem; border-radius:8px; transition:var(--transition);
+    }
+    .phone-nav-btn:hover { color:#fff; background:rgba(255,255,255,0.08); }
+    .phone-nav-btn:disabled { opacity:0.25; cursor:default; }
+    .phone-nav-btn:disabled:hover { background:none; }
+    .phone-nav-home i { font-size:0.6rem; }
+
+    @media (max-width:900px) {
+      .footer-phone-col { align-items:center; }
+      .phone-device { max-width:168px; }
+    }
+    @media (max-width:768px) {
+      .footer-phone-col { align-items:center; margin-top:8px; }
+      .phone-device { max-width:190px; }
+    }
 
     /* ============================================================
        FLOATING BUTTONS: Admin moved here as 4th float button
@@ -1629,12 +1791,6 @@
         <div class="footer-brand">
           <img src="https://i.ibb.co/Y7Bz797K/bcegm-Ccd7z4r-Oem-Fy-Tv7y-M7-Knp7-XTespl-Bq-R8hm-T.png" alt="CBCE Logo" />
           <p>Continental Board of Computer Education, a venture of CBCE Skill Development Private Limited. An ISO 9001:2015 &amp; 21001:2018 certified organisation, registered under the Ministry of Corporate Affairs, Government of India.</p>
-          <div class="social-bar" style="margin-top:16px;">
-            <a href="#" class="soc-btn soc-fb"><i class="fab fa-facebook-f"></i></a>
-            <a href="#" class="soc-btn soc-tw"><i class="fab fa-twitter"></i></a>
-            <a href="#" class="soc-btn soc-ig"><i class="fab fa-linkedin-in"></i></a>
-            <a href="#" class="soc-btn soc-yt"><i class="fab fa-youtube"></i></a>
-          </div>
         </div>
         <div class="footer-col">
           <h4>Quick Links</h4>
@@ -1649,9 +1805,82 @@
             <li><a href="#" onclick="return false;" class="nav-disabled" aria-disabled="true" tabindex="-1">Regional Center</a></li>
           </ul>
         </div>
-        <!-- "Our Services" column intentionally removed per request; slot kept
-             empty (not collapsed) so the 4-column footer-grid layout is unchanged. -->
-        <div class="footer-col" aria-hidden="true"></div>
+        <!-- ============================================================
+             FOOTER MINI SMARTPHONE WIDGET
+             Self-contained mobile-device UI: home screen with 4 app
+             icons (Facebook, X, Instagram, YouTube), an internal iframe
+             "screen", and an Android-style 3-button bottom nav (Recent
+             Apps / Home / Back). Keeps its own navigation history per
+             app, entirely independent of the main site's SPA router.
+             ============================================================ -->
+        <div class="footer-col footer-phone-col">
+          <h4>CBCE On Social</h4>
+          <div class="phone-widget" id="phone-widget" role="region" aria-label="CBCE social media mini app">
+            <div class="phone-device">
+              <div class="phone-notch"></div>
+              <div class="phone-screen" id="phone-screen">
+
+                <!-- HOME SCREEN -->
+                <div class="phone-view phone-home active" id="phone-home">
+                  <div class="phone-status-bar">
+                    <span class="phone-clock" id="phone-clock">9:41</span>
+                    <span class="phone-status-icons"><i class="fas fa-signal"></i><i class="fas fa-wifi"></i><i class="fas fa-battery-three-quarters"></i></span>
+                  </div>
+                  <div class="phone-home-title">
+                    <span>CBCE</span>
+                    <small>Follow us on social media</small>
+                  </div>
+                  <div class="phone-app-grid">
+                    <button type="button" class="phone-app-icon" data-app="facebook" onclick="phoneOpenApp('facebook')">
+                      <span class="phone-app-glyph app-facebook"><i class="fab fa-facebook-f"></i></span>
+                      <span class="phone-app-label">Facebook</span>
+                    </button>
+                    <button type="button" class="phone-app-icon" data-app="x" onclick="phoneOpenApp('x')">
+                      <span class="phone-app-glyph app-x"><i class="fab fa-x-twitter"></i></span>
+                      <span class="phone-app-label">X</span>
+                    </button>
+                    <button type="button" class="phone-app-icon" data-app="instagram" onclick="phoneOpenApp('instagram')">
+                      <span class="phone-app-glyph app-instagram"><i class="fab fa-instagram"></i></span>
+                      <span class="phone-app-label">Instagram</span>
+                    </button>
+                    <button type="button" class="phone-app-icon" data-app="youtube" onclick="phoneOpenApp('youtube')">
+                      <span class="phone-app-glyph app-youtube"><i class="fab fa-youtube"></i></span>
+                      <span class="phone-app-label">YouTube</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- APP VIEW (iframe + fallback share the same slot per app) -->
+                <div class="phone-view phone-app-view" id="phone-app-view">
+                  <div class="phone-app-topbar">
+                    <span class="phone-app-topbar-name" id="phone-app-name">App</span>
+                    <span class="phone-app-topbar-status" id="phone-app-loading"><i class="fas fa-circle-notch fa-spin"></i></span>
+                  </div>
+                  <div class="phone-app-frame-wrap" id="phone-app-frame-wrap">
+                    <!-- iframe(s) injected here per app by JS -->
+                  </div>
+                </div>
+
+                <!-- APP SWITCHER (Recent Apps) -->
+                <div class="phone-view phone-app-switcher" id="phone-app-switcher">
+                  <div class="phone-status-bar">
+                    <span class="phone-clock" id="phone-clock-switcher">9:41</span>
+                    <span class="phone-status-icons"><i class="fas fa-signal"></i><i class="fas fa-wifi"></i><i class="fas fa-battery-three-quarters"></i></span>
+                  </div>
+                  <div class="phone-switcher-title">Recent Apps</div>
+                  <div class="phone-app-switcher-list" id="phone-app-switcher-list"></div>
+                </div>
+
+              </div>
+              <!-- ANDROID-STYLE BOTTOM NAVIGATION -->
+              <div class="phone-navbar">
+                <button type="button" class="phone-nav-btn" title="Recent Apps" aria-label="Recent Apps" onclick="phoneShowSwitcher()"><i class="fas fa-bars"></i></button>
+                <button type="button" class="phone-nav-btn phone-nav-home" title="Home" aria-label="Home" onclick="phoneGoHome()"><i class="fas fa-circle"></i></button>
+                <button type="button" class="phone-nav-btn" title="Back" aria-label="Back" onclick="phoneGoBack()"><i class="fas fa-chevron-left"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="footer-col">
           <h4>Contact &amp; Newsletter</h4>
           <div class="footer-contact-items">
@@ -1718,6 +1947,64 @@
      JAVASCRIPT
      ============================================================ -->
 <script>
+  /* ============================================================
+     UNIFIED SCROLL-LOCK SYSTEM
+     ------------------------------------------------------------
+     Single source of truth for "is the background page allowed to
+     scroll". Every overlay/modal/panel/chat window in the site
+     (mobile nav, welcome popup, gallery lightbox, Crono chat window,
+     the footer phone widget, and any future overlay) calls
+     lockBodyScroll(id, true|false) instead of touching
+     document.body.style.overflow directly.
+
+     Why reference-counted: two overlays can legitimately be open at
+     once (e.g. Crono chat left open while the mobile nav is opened).
+     A naive boolean flag would let the first overlay's close call
+     unlock the body while the second overlay is still open. Using a
+     Set of active lock ids means the body only unlocks once every
+     lock has been released.
+
+     Locking technique: fixed-position the body at its current scroll
+     offset (instead of only overflow:hidden). overflow:hidden alone
+     still allows touch/wheel scroll-chaining to bleed into the page
+     on iOS Safari and some Android browsers; position:fixed fully
+     freezes the layout viewport on both desktop and mobile, and the
+     scroll position is restored exactly on unlock. ---- */
+  (function () {
+    const activeLocks = new Set();
+    let savedScrollY = 0;
+
+    function applyLock() {
+      savedScrollY = window.scrollY || window.pageYOffset || 0;
+      const body = document.body;
+      body.style.position = 'fixed';
+      body.style.top = (-savedScrollY) + 'px';
+      body.style.left = '0';
+      body.style.right = '0';
+      body.style.width = '100%';
+      body.classList.add('scroll-locked');
+    }
+    function releaseLock() {
+      const body = document.body;
+      body.style.position = '';
+      body.style.top = '';
+      body.style.left = '';
+      body.style.right = '';
+      body.style.width = '';
+      body.classList.remove('scroll-locked');
+      window.scrollTo(0, savedScrollY);
+    }
+
+    window.lockBodyScroll = function (id, shouldLock) {
+      const wasLocked = activeLocks.size > 0;
+      if (shouldLock) activeLocks.add(id);
+      else activeLocks.delete(id);
+      const isLocked = activeLocks.size > 0;
+      if (isLocked && !wasLocked) applyLock();
+      else if (!isLocked && wasLocked) releaseLock();
+    };
+  })();
+
   /* ============================================================
      ANIMATED ICON ENGINE (self-contained, CSS-only)
      Every <i class="fas/fab fa-*"> is wrapped in a .ico-wrap span and tagged with
@@ -1814,8 +2101,8 @@
   /* ============================
      WELCOME POPUP
      ============================ */
-  function showWelcome() { document.getElementById('welcome-overlay').classList.add('show'); }
-  function closeWelcome() { document.getElementById('welcome-overlay').classList.remove('show'); }
+  function showWelcome() { document.getElementById('welcome-overlay').classList.add('show'); lockBodyScroll('welcome', true); }
+  function closeWelcome() { document.getElementById('welcome-overlay').classList.remove('show'); lockBodyScroll('welcome', false); }
 
   /* ============================
      TOAST NOTIFICATION
@@ -1879,7 +2166,7 @@
     hamburger.classList.toggle('open', open);
     mobileNav.classList.toggle('open', open);
     navOverlay.classList.toggle('show', open);
-    document.body.style.overflow = open ? 'hidden' : '';
+    lockBodyScroll('mobile-nav', open);
   });
   navOverlay.addEventListener('click', closeMobileNav);
 
@@ -1887,7 +2174,7 @@
     hamburger.classList.remove('open');
     mobileNav.classList.remove('open');
     navOverlay.classList.remove('show');
-    document.body.style.overflow = '';
+    lockBodyScroll('mobile-nav', false);
   }
 
   /* ============================
@@ -2110,11 +2397,11 @@
   function openLightbox(el) {
     document.getElementById('lightbox-img').src = el.querySelector('img').src;
     document.getElementById('lightbox').classList.add('show');
-    document.body.style.overflow = 'hidden';
+    lockBodyScroll('lightbox', true);
   }
   function closeLightbox() {
     document.getElementById('lightbox').classList.remove('show');
-    document.body.style.overflow = '';
+    lockBodyScroll('lightbox', false);
   }
   document.getElementById('lightbox').addEventListener('click', function (e) { if (e.target === this) closeLightbox(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeLightbox(); } });
@@ -2222,9 +2509,28 @@
       || /^(who\s+made\s+this|who\s+built\s+this|who\s+created\s+this)\??$/.test(m);
   }
 
-  let cronoHistory = []; // {role, content}
+  /* ---- Session-scoped state (in-memory only, intentionally NOT persisted
+     to sessionStorage/localStorage) ----
+     A "session" here means "this page instance, since it was last loaded".
+     Keeping the transcript and the welcome-message flag as plain JS
+     variables (rather than in Web Storage, which would survive a
+     refresh) is what makes the required behaviour fall out naturally:
+       - Closing and reopening the chat window keeps the full transcript
+         in the DOM/memory and never re-adds the welcome message, because
+         nothing is torn down when the window is merely hidden.
+       - A page refresh reloads the script from scratch, so these
+         variables reinitialize empty and the welcome message is shown
+         again exactly once for that new session — matching "history
+         remains intact until the user explicitly clears it or the page
+         is refreshed".
+       - Explicitly clearing the chat (trash icon) resets everything and
+         re-shows the welcome message immediately, since that is a
+         deliberate user action to start over. ---- */
+  let cronoHistory = []; // {role, content}[] for this page session
   let cronoOpen = false;
   let cronoBusy = false;
+  let cronoWelcomed = false;     // has the welcome message already been shown this session?
+  let cronoTranscriptRendered = false; // guards against re-rendering the DOM transcript more than once
 
   const CRONO_SUGGESTIONS = [
     "What courses do you offer?",
@@ -2239,8 +2545,35 @@
     win.classList.toggle('show', cronoOpen);
     win.setAttribute('aria-hidden', cronoOpen ? 'false' : 'true');
     if (cronoOpen) {
-      if (!cronoHistory.length) cronoInit();
+      cronoEnsureReady();
+      // Chat window scroll lock: on mobile, where the chat window is
+      // effectively full-viewport, the background page must not scroll
+      // behind it. On desktop the chat is a small floating panel, so we
+      // only engage the body-level lock at narrow (mobile) widths to avoid
+      // any visible layout shift on desktop while still fully isolating
+      // scroll on mobile — the .crono-body itself always scroll-contains
+      // regardless of viewport size (see overscroll-behavior CSS rule).
+      if (window.matchMedia('(max-width: 480px)').matches) lockBodyScroll('crono', true);
       setTimeout(() => { const inp = document.getElementById('crono-input'); if (inp) inp.focus(); }, 200);
+    } else {
+      lockBodyScroll('crono', false);
+    }
+  }
+
+  /* ---- Ensures the window content is correct no matter how many times it
+     is opened/closed in this session: renders the transcript once, shows
+     the welcome message only if it has genuinely never been shown this
+     session, and never duplicates either. The DOM transcript is never
+     torn down on close, so re-opening just re-reveals what's already
+     there — this function only does real work the very first time the
+     window is opened in a given page session. ---- */
+  function cronoEnsureReady() {
+    if (cronoTranscriptRendered) return; // already set up for this page session
+    cronoTranscriptRendered = true;
+
+    if (!cronoWelcomed) {
+      cronoInit();
+      cronoWelcomed = true;
     }
   }
 
@@ -2249,7 +2582,10 @@
     cronoRenderSuggestions();
   }
 
-  /* ---- Clear chat: wipes history + transcript, then re-shows the intro ---- */
+  /* ---- Clear chat: wipes history + transcript, then re-shows the intro
+     as a fresh welcome — this is the one case (besides a real page
+     refresh) where the welcome message is intentionally shown again,
+     since it's a deliberate user action to start the conversation over. ---- */
   function cronoClearChat() {
     if (cronoBusy) return;
     cronoHistory = [];
@@ -2281,6 +2617,11 @@
     div.textContent = text;
     body.appendChild(div);
     body.scrollTop = body.scrollHeight;
+    // Kept in memory only (see "Session-scoped state" note above) so it
+    // feeds the AI's conversation context (cronoHistory.slice(-8)) — not
+    // written to any persistent storage, so a page refresh naturally
+    // starts clean.
+    cronoHistory.push({ role: role === 'user' ? 'user' : 'assistant', content: text });
     return div;
   }
 
@@ -2308,14 +2649,12 @@
     if (suggestions) suggestions.innerHTML = '';
 
     cronoAppendMessage('user', msg);
-    cronoHistory.push({ role: 'user', content: msg });
 
     // Local guard ONLY for the exact "who made/built/created you" question.
     // answered the same way every time, without depending on the API call.
     // Every other message (including general identity questions like
     // "who are you") is always answered live by the AI model itself.
     if (cronoIsCreatorQuestion(msg)) {
-      cronoHistory.push({ role: 'assistant', content: CRONO_CREATOR_REPLY });
       setTimeout(() => cronoAppendMessage('bot', CRONO_CREATOR_REPLY), 300);
       return;
     }
@@ -2329,12 +2668,10 @@
       const reply = await cronoCallOpenRouter(msg);
       cronoHideTyping();
       cronoAppendMessage('bot', reply);
-      cronoHistory.push({ role: 'assistant', content: reply });
     } catch (err) {
       cronoHideTyping();
       const notice = cronoConnectionNotice(err);
       cronoAppendMessage('bot', notice);
-      cronoHistory.push({ role: 'assistant', content: notice });
     } finally {
       cronoBusy = false;
       if (sendBtn) sendBtn.disabled = false;
@@ -2419,6 +2756,265 @@
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && cronoOpen) cronoToggle(false);
   });
+
+  /* ============================================================
+     FOOTER MINI SMARTPHONE WIDGET
+     Fully independent mini in-page "device": its own home screen, its
+     own per-app navigation history (so the phone's Back button moves
+     within an app's own history, not the main site's), and its own
+     Recent Apps switcher. Each app loads its live URL inside an
+     iframe; if the platform's response headers block iframe embedding
+     (X-Frame-Options / frame-ancestors CSP — true for Facebook, X,
+     Instagram and YouTube's normal web pages), a polished branded
+     fallback card is shown automatically instead of a blank/error
+     frame, with an "Open Website" button that opens the real page in
+     a new tab.
+     ============================================================ */
+  const PHONE_APPS = {
+    facebook: {
+      name: 'Facebook',
+      url: 'https://www.facebook.com/cbceindia?rdid=qtmyj1pWthNimSRh&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F15oC2Qw6ne%2F#',
+      icon: 'fab fa-facebook-f',
+      colorClass: 'app-facebook'
+    },
+    x: {
+      name: 'X',
+      url: 'https://x.com/cbceindia',
+      icon: 'fab fa-x-twitter',
+      colorClass: 'app-x'
+    },
+    instagram: {
+      name: 'Instagram',
+      url: 'https://www.instagram.com/cbceindia',
+      icon: 'fab fa-instagram',
+      colorClass: 'app-instagram'
+    },
+    youtube: {
+      name: 'YouTube',
+      url: 'https://www.youtube.com/@cbceindia28',
+      icon: 'fab fa-youtube',
+      colorClass: 'app-youtube'
+    }
+  };
+
+  // Per-app independent navigation history (array of URLs), plus a
+  // "recent apps" ordered list (most-recent last) driving the switcher.
+  const phoneState = {
+    history: { facebook: [], x: [], instagram: [], youtube: [] },
+    recents: [],       // app keys, most-recently-opened last
+    currentApp: null,  // key of the app currently on screen, or null on home/switcher
+    currentScreen: 'home', // 'home' | 'app' | 'switcher'
+    frames: {}         // app key -> created <iframe> element (cached, one per app)
+  };
+
+  function phoneShowScreen(name) {
+    const screens = document.querySelectorAll('#phone-widget .phone-view');
+    screens.forEach(s => s.classList.remove('active'));
+    const target = document.getElementById(
+      name === 'home' ? 'phone-home' : name === 'app' ? 'phone-app-view' : 'phone-app-switcher'
+    );
+    if (target) target.classList.add('active');
+    phoneState.currentScreen = name;
+    if (name === 'switcher') phoneRenderSwitcher();
+    phoneUpdateClock();
+  }
+
+  function phoneUpdateClock() {
+    const now = new Date();
+    const t = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    ['phone-clock', 'phone-clock-switcher'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = t;
+    });
+  }
+
+  function phoneGoHome() {
+    phoneState.currentApp = null;
+    phoneShowScreen('home');
+  }
+
+  function phoneShowSwitcher() {
+    phoneShowScreen('switcher');
+  }
+
+  function phoneRenderSwitcher() {
+    const list = document.getElementById('phone-app-switcher-list');
+    if (!list) return;
+    list.innerHTML = '';
+    if (!phoneState.recents.length) {
+      list.innerHTML = '<div class="phone-switcher-empty">No recent apps yet.<br>Open an app from the Home screen.</div>';
+      return;
+    }
+    // Most-recently-opened first in the list.
+    [...phoneState.recents].reverse().forEach(key => {
+      const app = PHONE_APPS[key];
+      if (!app) return;
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'phone-switch-card';
+      card.innerHTML =
+        '<span class="phone-app-glyph ' + app.colorClass + '"><i class="' + app.icon + '"></i></span>' +
+        '<span>' + app.name + '</span>';
+      card.onclick = () => phoneOpenApp(key);
+      list.appendChild(card);
+    });
+  }
+
+  function phoneMarkRecent(key) {
+    phoneState.recents = phoneState.recents.filter(k => k !== key);
+    phoneState.recents.push(key);
+  }
+
+  /* ---- Opening an app: pushes its base URL onto that app's own history
+     stack the first time it's opened this session, then shows it. ---- */
+  function phoneOpenApp(key) {
+    const app = PHONE_APPS[key];
+    if (!app) return;
+    if (!phoneState.history[key].length) {
+      phoneState.history[key].push(app.url);
+    }
+    phoneState.currentApp = key;
+    phoneMarkRecent(key);
+    phoneRenderAppFrame(key);
+    phoneShowScreen('app');
+  }
+
+  /* ---- Renders (or reuses) the iframe for a given app, wiring up the
+     load-detection heuristic that decides whether to show the live
+     embedded page or the branded fallback. Each app's iframe is created
+     once and cached, so switching between apps preserves each app's own
+     loaded state instead of reloading every time. ---- */
+  function phoneRenderAppFrame(key) {
+    const app = PHONE_APPS[key];
+    const wrap = document.getElementById('phone-app-frame-wrap');
+    const nameEl = document.getElementById('phone-app-name');
+    const loadingEl = document.getElementById('phone-app-loading');
+    if (nameEl) nameEl.textContent = app.name;
+
+    // Hide every existing frame/fallback in the wrap; show only this app's.
+    wrap.querySelectorAll('iframe, .phone-fallback').forEach(n => n.classList.remove('active'));
+
+    let entry = phoneState.frames[key];
+    if (!entry) {
+      entry = phoneBuildAppEntry(key);
+      phoneState.frames[key] = entry;
+      wrap.appendChild(entry.iframe);
+      wrap.appendChild(entry.fallback);
+    }
+
+    if (entry.status === 'loading') {
+      if (loadingEl) loadingEl.classList.remove('hidden');
+    } else if (loadingEl) {
+      loadingEl.classList.add('hidden');
+    }
+
+    if (entry.status === 'blocked') {
+      entry.fallback.classList.add('active');
+    } else {
+      entry.iframe.classList.add('active');
+    }
+  }
+
+  function phoneBuildAppEntry(key) {
+    const app = PHONE_APPS[key];
+    const url = phoneState.history[key][phoneState.history[key].length - 1] || app.url;
+
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute('title', app.name + ' — CBCE');
+    iframe.setAttribute('loading', 'lazy');
+    iframe.setAttribute('referrerpolicy', 'no-referrer');
+    // Sandbox kept as permissive as embedding these public social pages
+    // requires (scripts/same-origin/forms/popups for their own UI to
+    // function) while still preventing top-level navigation of the host
+    // page itself — the iframe cannot break out and navigate our site.
+    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-forms allow-popups-to-escape-sandbox');
+    iframe.src = url;
+
+    const fallback = document.createElement('div');
+    fallback.className = 'phone-fallback';
+    fallback.innerHTML =
+      '<span class="phone-fallback-icon ' + app.colorClass + '"><i class="' + app.icon + '"></i></span>' +
+      '<h5>' + app.name + '</h5>' +
+      '<p>' + app.name + ' does not allow its page to be displayed inside another site. Open it directly instead.</p>' +
+      '<button type="button" class="phone-fallback-btn" onclick="window.open(\'' + app.url.replace(/'/g, "\\'") + '\',\'_blank\',\'noopener\')">' +
+        '<i class="fas fa-arrow-up-right-from-square"></i> Open Website' +
+      '</button>';
+
+    const entry = { iframe, fallback, status: 'loading' };
+
+    // Detection heuristic: browsers refuse to fire a normal 'load' or
+    // fire it with an inaccessible/empty document when X-Frame-Options
+    // or a frame-ancestors CSP blocks embedding. There is no reliable
+    // cross-origin JS signal for "blocked" (same-origin policy prevents
+    // reading the blocked frame's contents), so a short grace timer is
+    // the standard, safest way to detect it: if genuine content hasn't
+    // signalled successful load within the window, treat it as blocked
+    // and switch to the fallback automatically.
+    const blockTimer = setTimeout(() => phoneMarkBlocked(key), 4500);
+
+    iframe.addEventListener('load', () => {
+      clearTimeout(blockTimer);
+      // A same-origin-policy read attempt: if the frame loaded a real
+      // cross-origin document this throws (expected, means it's live),
+      // if it silently succeeds with an empty/about:blank-ish doc it
+      // usually means the request was refused before rendering.
+      let blocked = false;
+      try {
+        const doc = iframe.contentDocument || (iframe.contentWindow && iframe.contentWindow.document);
+        if (doc && (!doc.body || !doc.body.hasChildNodes())) blocked = true;
+      } catch (e) {
+        blocked = false; // cross-origin access throwing = real page actually loaded
+      }
+      if (blocked) phoneMarkBlocked(key);
+      else phoneMarkLoaded(key);
+    }, { once: true });
+
+    iframe.addEventListener('error', () => {
+      clearTimeout(blockTimer);
+      phoneMarkBlocked(key);
+    }, { once: true });
+
+    return entry;
+  }
+
+  function phoneMarkLoaded(key) {
+    const entry = phoneState.frames[key];
+    if (!entry || entry.status !== 'loading') return;
+    entry.status = 'loaded';
+    if (phoneState.currentApp === key) phoneRenderAppFrame(key);
+  }
+
+  function phoneMarkBlocked(key) {
+    const entry = phoneState.frames[key];
+    if (!entry || entry.status !== 'loading') return;
+    entry.status = 'blocked';
+    if (phoneState.currentApp === key) phoneRenderAppFrame(key);
+  }
+
+  /* ---- Phone's own Back button: moves within the CURRENT app's own
+     history stack, independent of the main site/browser history. If
+     the app is already at its earliest entry, Back returns to the
+     phone's Home screen (the natural next step "up"). From the Recent
+     Apps switcher or Home screen, Back also returns Home. ---- */
+  function phoneGoBack() {
+    if (phoneState.currentScreen === 'switcher') { phoneGoHome(); return; }
+    if (phoneState.currentScreen !== 'app' || !phoneState.currentApp) { phoneGoHome(); return; }
+    const key = phoneState.currentApp;
+    const stack = phoneState.history[key];
+    if (stack.length > 1) {
+      stack.pop();
+      // Re-navigating within an app's own history reloads that app's
+      // frame to the previous entry, rebuilding its cached iframe.
+      delete phoneState.frames[key];
+      phoneRenderAppFrame(key);
+    } else {
+      phoneGoHome();
+    }
+  }
+
+  // Keep the phone's status-bar clock accurate while it's in view.
+  setInterval(phoneUpdateClock, 30000);
+  phoneUpdateClock();
 
   /* ============================
      INIT
