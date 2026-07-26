@@ -2116,13 +2116,39 @@
 
   /* ============================
      PRELOADER
+     ------------------------------------------------------------
+     Hides on DOMContentLoaded (page content ready) rather than
+     window.load, so it never blocks on slow/hanging external
+     resources (fonts, the CDN-hosted logo image, phone-mockup
+     iframes, etc.). A hard-timeout safety net guarantees the
+     preloader is removed even if something above throws, and the
+     "already past loading" guard covers the case where this
+     script runs after the readyState has already advanced.
      ============================ */
-  window.addEventListener('load', () => {
-    setTimeout(() => {
-      document.getElementById('preloader').classList.add('fade-out');
+  (function () {
+    let hidden = false;
+    function hidePreloader() {
+      if (hidden) return;
+      hidden = true;
+      try {
+        const el = document.getElementById('preloader');
+        if (el) el.classList.add('fade-out');
+      } catch (e) { /* no-op: never let this block the page */ }
       setTimeout(showWelcome, 800);
-    }, 1800);
-  });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => setTimeout(hidePreloader, 900));
+    } else {
+      // DOM already parsed by the time this ran — don't wait further.
+      setTimeout(hidePreloader, 300);
+    }
+
+    // Absolute safety net: never let the preloader stay up for more
+    // than ~5s, no matter what else happens (slow assets, JS errors
+    // elsewhere on the page, etc.).
+    setTimeout(hidePreloader, 5000);
+  })();
 
   /* ============================
      WELCOME POPUP
